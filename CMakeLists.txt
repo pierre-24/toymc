@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.18)
 project(toymc
         VERSION 0.1
         DESCRIPTION "Me playing with MPI"
@@ -18,4 +18,3 @@ enable_testing()
 
 # add test
 add_test(NAME tests_input_file COMMAND tests_input_file)
-add_test(NAME tests_input_file_parser COMMAND tests_input_file_parser)
