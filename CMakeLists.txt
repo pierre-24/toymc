@@ -6,10 +6,16 @@ project(toymc
 
 set(CMAKE_C_STANDARD 99)
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
+# find check
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-file(GLOB SOURCES "src/*.c")
+# subdirs
+add_subdirectory(src)
+add_subdirectory(tests)
 
-add_executable(toymc ${SOURCES})
-target_link_libraries(toymc m)
-target_compile_options(toymc PRIVATE -Wall -Wextra -Wpedantic)
+# Unit tests
+enable_testing()
+
+# add test
+add_test(NAME tests_input_file COMMAND tests_input_file)
+add_test(NAME tests_input_file_parser COMMAND tests_input_file_parser)

@@ -1,5 +1,5 @@
-#ifndef INCLUDE_TIMER_H
-#define INCLUDE_TIMER_H
+#ifndef TOYMC_TIMER_H
+#define TOYMC_TIMER_H
 
 #include <time.h>
 
@@ -18,4 +18,4 @@ double timer_stop(struct timespec* start) {
 }
 
 
-#endif // INCLUDE_TIMER_H
+#endif // TOYMC_TIMER_H

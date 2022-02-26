@@ -1,0 +1,8 @@
+#ifndef TOYMC_TESTS_H
+#define TOYMC_TESTS_H
+
+#include <check.h>
+
+void tests_suite(Suite* s);
+
+#endif //TOYMC_TESTS_H

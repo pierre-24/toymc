@@ -1,0 +1,16 @@
+set(LIB_SOURCES
+        input_file.c
+        input_file_parser.c)
+
+set(PROG_SOURCES
+        main.c)
+
+FILE(GLOB HEADERS *.h)
+
+# library
+add_library(toymc STATIC ${LIB_SOURCES} ${HEADERS})
+target_compile_options(toymc PRIVATE -Wall -Wextra -Wpedantic)
+
+# executable
+add_executable(run_toymc ${PROG_SOURCES} ${HEADERS})
+target_link_libraries(run_toymc m toymc)
