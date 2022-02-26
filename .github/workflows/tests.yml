@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install check packages
-        run: sudo apt-get install check-dev
+        run: sudo apt-get install check
       - name: cmake cversion
         run: cmake --version
       - name: create configs
