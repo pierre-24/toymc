@@ -28,6 +28,7 @@ typedef struct tm_infi_t_ {
     char* key;
 
     struct tm_infi_t_* val_obj_or_list;
+    struct tm_infi_t_* last;
     int val_int;
     double val_real;
     char* val_str;
@@ -67,7 +68,8 @@ int tm_infi_string_length(tm_infi_t* object, unsigned int *s);
 // array
 tm_infi_t* tm_infi_array_new();
 int tm_infi_array_append(tm_infi_t* obj, tm_infi_t* val);
-int tm_infi_array_length(tm_infi_t* obj, int* sz);
+int tm_infi_array_get(tm_infi_t* obj, int index, tm_infi_t** val);
+int tm_infi_array_length(tm_infi_t* obj, unsigned int* sz);
 
 // iterator
 typedef struct tm_infi_iterator_ {

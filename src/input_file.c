@@ -9,6 +9,7 @@ tm_infi_t* tm_infi_new(tm_infi_type t) {
 
         j->key = NULL;
         j->val_obj_or_list = NULL;
+        j->last = NULL;
         j->val_str = NULL;
         j->next = NULL;
         j->val_size = 0;
@@ -121,7 +122,9 @@ int tm_infi_real_value(tm_infi_t* object, double * value) {
 /* string */
 tm_infi_t* tm_infi_string_new(char* val) {
     tm_infi_t* o = tm_infi_new(TM_T_STRING);
-    tm_infi_string_set(o, val);
+    if(o != NULL)
+        tm_infi_string_set(o, val);
+
     return o;
 }
 
@@ -164,6 +167,60 @@ int tm_infi_string_length(tm_infi_t *object, unsigned int *s) {
         return -1;
 
     *s = object->val_size;
+    return 0;
+}
+
+/* array */
+tm_infi_t* tm_infi_array_new() {
+    tm_infi_t* o = tm_infi_new(TM_T_ARRAY);
+    if(o != NULL)
+        o->val_size = 0;
+
+    return o;
+}
+
+int tm_infi_array_append(tm_infi_t* obj, tm_infi_t* val) {
+    if (TM_INFI_CHECK_P(obj, TM_T_ARRAY))
+        return -1;
+
+    if(obj->val_obj_or_list == NULL) {
+        obj->val_obj_or_list = val;
+        obj->last = val;
+    } else {
+        obj->last->next = val;
+        obj->last = val;
+    }
+
+    obj->val_size += 1;
+    return 0;
+}
+
+int tm_infi_array_length(tm_infi_t* obj, unsigned int* sz) {
+    if (TM_INFI_CHECK_P(obj, TM_T_ARRAY))
+        return -1;
+
+    *sz = obj->val_size;
+    return 0;
+}
+
+int tm_infi_array_get(tm_infi_t* obj, int index, tm_infi_t** val) {
+    if (TM_INFI_CHECK_P(obj, TM_T_ARRAY))
+        return -1;
+
+    if (index < 0)
+        index = (int) obj->val_size + index;
+
+    if (index < 0 || index >= (int) obj->val_size)
+        return -2;
+
+    tm_infi_t* o = obj->val_obj_or_list;
+    for(int i=0; i < index; i++) {
+        if (o == NULL)
+            return -3;
+        o = o->next;
+    }
+
+    *val = o;
     return 0;
 }
 
