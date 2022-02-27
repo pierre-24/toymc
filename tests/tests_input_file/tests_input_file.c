@@ -72,8 +72,8 @@ void teardown_real() {
 
 START_TEST(test_infi_real_create) {
    double v = -1;
-    tm_infi_real_value(obj_real, &v);
-    ck_assert_double_eq(v, REAL_VALUE);
+   tm_infi_real_value(obj_real, &v);
+   ck_assert_double_eq(v, REAL_VALUE);
 }
 END_TEST
 
@@ -86,7 +86,7 @@ START_TEST(test_infi_real_set) {
 END_TEST
 
 void add_test_cases(Suite* s) {
-    // booleans
+    // boolean
     TCase* tc_boolean = tcase_create("booleans");
     tcase_add_checked_fixture(tc_boolean, setup_boolean, teardown_boolean);
     tcase_add_test(tc_boolean, test_infi_boolean_create);
@@ -106,7 +106,7 @@ void add_test_cases(Suite* s) {
     TCase* tc_real = tcase_create("reals");
     tcase_add_checked_fixture(tc_real, setup_real, teardown_real);
     tcase_add_test(tc_real, test_infi_real_create);
-    tcase_add_test(tc_real, test_infi_real_set);
+    // tcase_add_test(tc_real, test_infi_real_set);
 
     suite_add_tcase(s, tc_real);
 }

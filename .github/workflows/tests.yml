@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install check packages
-        run: sudo apt-get install automake autoconf libtool libsubunit-dev
+      - name: Install dependencies
+        run: sudo apt-get install automake autoconf libtool libsubunit-dev valgrind
       - name: compile & install check
         run: scripts/install-check.sh
       - name: cmake cversion
@@ -22,4 +22,4 @@ jobs:
       - name: make
         run: make
       - name: unit tests
-        run: ctest -V
+        run: CK_FORK=no ctest -V -T memcheck

@@ -14,6 +14,8 @@ add_subdirectory(src)
 add_subdirectory(tests)
 
 # Unit tests
+set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1 --errors-for-leak-kinds=definite,possible,reachable" )
+include (CTest)
 enable_testing()
 
 # add test
