@@ -111,4 +111,5 @@ _deps
 
 tests/*/main.c
 tests/*/tests.h
+vendor/
 

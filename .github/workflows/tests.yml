@@ -12,7 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install check packages
-        run: sudo apt-get install check
+        run: sudo apt-get install automake autoconf libtool libsubunit-dev
+      - name: compile & install check
+        run: scripts/install-check.sh
       - name: cmake cversion
         run: cmake --version
       - name: create configs

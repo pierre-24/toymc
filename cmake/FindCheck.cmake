@@ -17,7 +17,7 @@
 #  For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 
 
-INCLUDE( FindPkgConfig )
+find_package(PkgConfig)
 
 # Take care about check.pc settings
 PKG_SEARCH_MODULE( CHECK Check)
@@ -27,10 +27,9 @@ IF( NOT CHECK_FOUND )
     IF ( CHECK_INSTALL_DIR )
         MESSAGE ( STATUS "Using override CHECK_INSTALL_DIR to find Check" )
         SET ( CHECK_INCLUDE_DIR  "${CHECK_INSTALL_DIR}/include" )
+        FIND_PATH( CHECK_INCLUDE_DIR check.h )
         SET ( CHECK_INCLUDE_DIRS "${CHECK_INCLUDE_DIR}" )
-        FIND_LIBRARY( CHECK_LIBRARY NAMES check PATHS "${CHECK_INSTALL_DIR}/lib" )
-        FIND_LIBRARY( COMPAT_LIBRARY NAMES compat PATHS "${CHECK_INSTALL_DIR}/lib" )
-        SET ( CHECK_LIBRARIES "${CHECK_LIBRARY}" "${COMPAT_LIBRARY}" )
+        FIND_LIBRARY( CHECK_LIBRARIES NAMES check PATHS "${CHECK_INSTALL_DIR}/lib/")
     ELSE ( CHECK_INSTALL_DIR )
         FIND_PATH( CHECK_INCLUDE_DIR check.h )
         FIND_LIBRARY( CHECK_LIBRARIES NAMES check )
