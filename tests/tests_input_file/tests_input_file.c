@@ -85,6 +85,42 @@ START_TEST(test_infi_real_set) {
 }
 END_TEST
 
+
+/* strings */
+#define STRING_VALUE "x"
+#define STRING_OTHER_VALUE "y"
+tm_infi_t* obj_string;
+
+void setup_string() {
+    obj_string = tm_infi_string_new(STRING_VALUE);
+}
+
+void teardown_string() {
+    tm_infi_delete(obj_string);
+}
+
+START_TEST(test_infi_string_create) {
+    char* v = NULL;
+    tm_infi_string_value(obj_string, &v);
+    ck_assert_str_eq(v, STRING_VALUE);
+}
+END_TEST
+
+START_TEST(test_infi_string_length) {
+    unsigned int l = 0;
+    tm_infi_string_length(obj_string, &l);
+    ck_assert_uint_eq(l, strlen(STRING_VALUE));
+}
+END_TEST
+
+START_TEST(test_infi_string_set) {
+    char* v = NULL;
+    tm_infi_string_set(obj_string, STRING_OTHER_VALUE);
+    tm_infi_string_value(obj_string, &v);
+    ck_assert_str_eq(v, STRING_OTHER_VALUE);
+}
+END_TEST
+
 void add_test_cases(Suite* s) {
     // boolean
     TCase* tc_boolean = tcase_create("booleans");
@@ -106,7 +142,16 @@ void add_test_cases(Suite* s) {
     TCase* tc_real = tcase_create("reals");
     tcase_add_checked_fixture(tc_real, setup_real, teardown_real);
     tcase_add_test(tc_real, test_infi_real_create);
-    // tcase_add_test(tc_real, test_infi_real_set);
+    tcase_add_test(tc_real, test_infi_real_set);
 
     suite_add_tcase(s, tc_real);
+
+    // strings
+    TCase* tc_string = tcase_create("strings");
+    tcase_add_checked_fixture(tc_string, setup_string, teardown_string);
+    tcase_add_test(tc_string, test_infi_string_create);
+    tcase_add_test(tc_string, test_infi_string_length);
+    tcase_add_test(tc_string, test_infi_string_set);
+
+    suite_add_tcase(s, tc_string);
 }

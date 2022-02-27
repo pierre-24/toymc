@@ -1,4 +1,5 @@
 #!/bin/bash
+# Install check in ./vendor/
 
 GIT_REF="0.15.2"
 DEST="vendor/"

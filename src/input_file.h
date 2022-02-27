@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define TM_INFI_IS(o,t) ((o)->val_type == (t))
 #define TM_INFI_CHECK_P(o,t) ((o) == NULL || (o)->val_type != (t))
@@ -30,7 +31,7 @@ typedef struct tm_infi_t_ {
     int val_int;
     double val_real;
     char* val_str;
-    int val_size;
+    unsigned int val_size;
 
     struct tm_infi_t_* next;
 } tm_infi_t;
@@ -61,7 +62,7 @@ int tm_infi_real_value(tm_infi_t* obj, double* val);
 tm_infi_t* tm_infi_string_new(char* val);
 int tm_infi_string_set(tm_infi_t* obj, char* val);
 int tm_infi_string_value(tm_infi_t* obj, char** val);
-int tm_infi_string_length(tm_infi_t* obj, int* sz);
+int tm_infi_string_length(tm_infi_t* object, unsigned int *s);
 
 // array
 tm_infi_t* tm_infi_array_new();

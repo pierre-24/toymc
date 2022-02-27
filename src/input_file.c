@@ -118,3 +118,52 @@ int tm_infi_real_value(tm_infi_t* object, double * value) {
     return 0;
 }
 
+/* string */
+tm_infi_t* tm_infi_string_new(char* val) {
+    tm_infi_t* o = tm_infi_new(TM_T_STRING);
+    tm_infi_string_set(o, val);
+    return o;
+}
+
+int tm_infi_string_set(tm_infi_t* object, char* val) {
+    if (TM_INFI_CHECK_P(object, TM_T_STRING))
+        return -1;
+
+    if (val == NULL)
+        return -1;
+
+    if (object->val_str != NULL) {
+        free(object->val_str);
+        object->val_str = NULL;
+    }
+
+    object->val_size = strlen(val);
+    object->val_str = malloc((object->val_size + 1) * sizeof(char));
+
+    if (object->val_str == NULL)
+        return -1;
+
+    strcpy(object->val_str, val);
+
+    return 0;
+}
+
+int tm_infi_string_value(tm_infi_t* object, char** val) {
+    if (TM_INFI_CHECK_P(object, TM_T_STRING))
+        return -1;
+
+    *val = object->val_str;
+    return 0;
+}
+
+int tm_infi_string_length(tm_infi_t *object, unsigned int *s) {
+    if (TM_INFI_CHECK_P(object, TM_T_STRING))
+        return -1;
+
+    if (object->val_str == NULL)
+        return -1;
+
+    *s = object->val_size;
+    return 0;
+}
+
