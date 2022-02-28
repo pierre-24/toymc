@@ -301,3 +301,45 @@ int tm_infi_array_get(tm_infi_t* obj, int index, tm_infi_t** val) {
     return 0;
 }
 
+/* iterator */
+tm_infi_iterator* tm_infi_iterator_new(tm_infi_t* obj) {
+    if (!TM_INFI_CHECK_P(obj, TM_T_ARRAY) && !TM_INFI_CHECK_P(obj, TM_T_OBJECT))
+        return NULL;
+
+    tm_infi_iterator* it = malloc(sizeof(tm_infi_iterator));
+    if(it != NULL) {
+        it->obj = obj;
+        it->next = obj->val_obj_or_list;
+    }
+
+    return it;
+}
+
+int tm_infi_iterator_delete(tm_infi_iterator* it) {
+    if(it == NULL)
+        return -1;
+
+    free(it);
+    return 0;
+}
+
+int tm_infi_iterator_has_next(tm_infi_iterator* it) {
+    if(it == NULL)
+        return 0;
+
+    return it->next != NULL;
+}
+
+int tm_infi_iterator_next(tm_infi_iterator* it, tm_infi_t** obj) {
+    if(it == NULL)
+        return -1;
+
+    if(it->next == NULL)
+        return -1;
+
+    *obj = it->next;
+    it->next = it->next->next;
+
+    return 0;
+}
+

@@ -202,6 +202,34 @@ START_TEST(test_infi_array_length) {
 }
 END_TEST
 
+
+START_TEST(test_infi_array_iterate) {
+
+    tm_infi_t* tab[] = {
+            tm_infi_integer_new(INT_VALUE),
+            tm_infi_integer_new(INT_VALUE),
+            tm_infi_integer_new(INT_VALUE)
+    };
+
+    for(int i=0; i < 3; i++)
+        _OK(tm_infi_array_append(obj_array, tab[i]));
+
+    tm_infi_t* obj;
+    tm_infi_iterator * it = tm_infi_iterator_new(obj_array);
+    int i = 0;
+
+    while(tm_infi_iterator_has_next(it)) {
+        _OK(tm_infi_iterator_next(it, &obj));
+        ck_assert_ptr_eq(obj, tab[i]);
+        i++;
+    }
+
+    ck_assert_int_eq(i, 3);
+
+    tm_infi_iterator_delete(it);
+}
+END_TEST
+
 /* objects */
 tm_infi_t* obj_object;
 
@@ -284,6 +312,38 @@ START_TEST(test_infi_object_get) {
 }
 END_TEST
 
+START_TEST(test_infi_object_iterate) {
+
+    tm_infi_t* tab[] = {
+            tm_infi_integer_new(INT_VALUE),
+            tm_infi_integer_new(INT_VALUE),
+            tm_infi_integer_new(INT_VALUE)
+    };
+
+    char* key[] = {
+            "ab",
+            "xe",
+            "qxyz"
+    };
+
+    for(int i=0; i < 3; i++)
+        _OK(tm_infi_object_set(obj_object, key[i], tab[i]));
+
+    tm_infi_t* obj;
+    tm_infi_iterator * it = tm_infi_iterator_new(obj_object);
+    int i = 0;
+
+    while(tm_infi_iterator_next(it, &obj) == 0) { // another (less safe?) form
+        ck_assert_str_eq(obj->key, key[i]);
+        ck_assert_ptr_eq(obj, tab[i]);
+        i++;
+    }
+
+    ck_assert_int_eq(i, 3);
+    tm_infi_iterator_delete(it);
+}
+END_TEST
+
 void add_test_cases(Suite* s) {
     // boolean
     TCase* tc_boolean = tcase_create("booleans");
@@ -324,6 +384,7 @@ void add_test_cases(Suite* s) {
     tcase_add_test(tc_array, test_infi_array_append);
     tcase_add_test(tc_array, test_infi_array_get);
     tcase_add_test(tc_array, test_infi_array_length);
+    tcase_add_test(tc_array, test_infi_array_iterate);
 
     suite_add_tcase(s, tc_array);
 
@@ -332,6 +393,7 @@ void add_test_cases(Suite* s) {
     tcase_add_checked_fixture(tc_object, setup_object, teardown_object);
     tcase_add_test(tc_object, test_infi_object_set);
     tcase_add_test(tc_object, test_infi_object_get);
+    tcase_add_test(tc_object, test_infi_object_iterate);
 
     suite_add_tcase(s, tc_object);
 }

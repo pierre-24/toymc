@@ -74,7 +74,7 @@ int tm_infi_array_length(tm_infi_t* obj, unsigned int* sz);
 // iterator
 typedef struct tm_infi_iterator_ {
     tm_infi_t * obj;
-    tm_infi_t* current;
+    tm_infi_t* next;
 } tm_infi_iterator;
 
 tm_infi_iterator* tm_infi_iterator_new(tm_infi_t* obj);
