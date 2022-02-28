@@ -62,7 +62,7 @@ int tm_infi_real_value(tm_infi_t* obj, double* val);
 // string
 tm_infi_t* tm_infi_string_new(char* val);
 int tm_infi_string_set(tm_infi_t* obj, char* val);
-int tm_infi_string_value(tm_infi_t* obj, char** val);
+int tm_infi_string_value(tm_infi_t* object, const char **val);
 int tm_infi_string_length(tm_infi_t* object, unsigned int *s);
 
 // array
