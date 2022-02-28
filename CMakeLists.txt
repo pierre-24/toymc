@@ -20,3 +20,4 @@ enable_testing()
 
 # add test
 add_test(NAME tests_input_file COMMAND tests_input_file)
+add_test(NAME tests_input_file_parser COMMAND tests_input_file_parser)

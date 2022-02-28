@@ -10,3 +10,4 @@ set(CHECK_EXTRA_LIBS m subunit rt pthread)
 
 # add subdirectories
 add_subdirectory(tests_input_file)
+add_subdirectory(tests_input_file_parser)
