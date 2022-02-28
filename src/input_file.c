@@ -46,6 +46,83 @@ int tm_infi_delete(tm_infi_t* obj) {
     return 0;
 }
 
+tm_infi_t* tm_infi_object_new() {
+    tm_infi_t* o = tm_infi_new(TM_T_OBJECT);
+    if(o != NULL)
+        o->val_size = 0;
+
+    return o;
+
+}
+int tm_infi_object_set(tm_infi_t* obj, char* key, tm_infi_t* val) {
+    if (TM_INFI_CHECK_P(obj, TM_T_OBJECT))
+        return -1;
+
+    if(key == NULL || val == NULL)
+        return -2;
+
+    // key
+    val->key = malloc(sizeof(char) * (strlen(key) + 1));
+    if(val->key == NULL)
+        return -3;
+
+    strcpy(val->key, key);
+
+
+    // value
+    tm_infi_t* o = obj->val_obj_or_list, *prev = NULL;
+    int set = 0;
+    while (o != NULL) { // look first if it does exist
+        if(strcmp(o->key, key) == 0) {
+            val->next = o->next;
+            o->next = NULL;
+            tm_infi_delete(o);
+            if(prev == NULL)
+                obj->val_obj_or_list = val;
+            else
+                prev->next = val;
+
+            if(val->next == NULL)
+                obj->last = val;
+
+            set = 1;
+            break;
+        }
+
+        prev = o;
+        o = o->next;
+    }
+    if(!set) { // if not, adds it
+        if(obj->val_obj_or_list == NULL) {
+            obj->val_obj_or_list = val;
+            obj->last = val;
+        } else {
+            obj->last->next = val;
+            obj->last = val;
+        }
+
+        obj->val_size += 1;
+    }
+    return 0;
+}
+
+int tm_infi_object_get(tm_infi_t* obj, char* key, tm_infi_t** val) {
+    if (TM_INFI_CHECK_P(obj, TM_T_OBJECT))
+        return -1;
+
+    tm_infi_t* o = obj->val_obj_or_list;
+    while (o != NULL) {
+        if (strcmp(o->key, key) == 0) {
+            *val = o;
+            return 0;
+        }
+
+        o = o->next;
+    }
+
+    return -2;
+}
+
 /* boolean */
 tm_infi_t* tm_infi_boolean_new(int val) {
     tm_infi_t* o = tm_infi_new(TM_T_BOOLEAN);

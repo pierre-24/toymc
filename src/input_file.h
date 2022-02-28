@@ -41,7 +41,7 @@ int tm_infi_delete(tm_infi_t* obj);
 
 // object
 tm_infi_t* tm_infi_object_new();
-int tm_infi_object_set(tm_infi_t* obj, char* key, tm_infi_t** val);
+int tm_infi_object_set(tm_infi_t* obj, char* key, tm_infi_t* val);
 int tm_infi_object_get(tm_infi_t* obj, char* key, tm_infi_t** val);
 
 // integer

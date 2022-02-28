@@ -202,6 +202,88 @@ START_TEST(test_infi_array_length) {
 }
 END_TEST
 
+/* objects */
+tm_infi_t* obj_object;
+
+void setup_object() {
+    obj_object = tm_infi_object_new();
+}
+
+void teardown_object() {
+    _OK(tm_infi_delete(obj_object));
+}
+
+START_TEST(test_infi_object_set) {
+    tm_infi_t* val = tm_infi_integer_new(INT_VALUE);
+    tm_infi_t* val2 = tm_infi_integer_new(INT_VALUE);
+    tm_infi_t* val3 = tm_infi_integer_new(INT_VALUE);
+    tm_infi_t* val4 = tm_infi_integer_new(INT_VALUE);
+    tm_infi_t* val5 = tm_infi_integer_new(INT_VALUE);
+
+    // first set
+    ck_assert_uint_eq(obj_object->val_size, 0);
+    _OK(tm_infi_object_set(obj_object, "key1", val));
+    ck_assert_uint_eq(obj_object->val_size, 1);
+
+    ck_assert_ptr_eq(obj_object->val_obj_or_list, val);
+    ck_assert_ptr_eq(obj_object->last, val);
+
+    // second set
+    _OK(tm_infi_object_set(obj_object, "key2", val2));
+    ck_assert_uint_eq(obj_object->val_size, 2);
+
+    ck_assert_ptr_eq(obj_object->val_obj_or_list, val);
+    ck_assert_ptr_eq(obj_object->val_obj_or_list->next, val2);
+    ck_assert_ptr_eq(obj_object->last, val2);
+
+    // reset a key that already exists (in last position)
+    _OK(tm_infi_object_set(obj_object, "key2", val3));
+    ck_assert_uint_eq(obj_object->val_size, 2);
+    ck_assert_ptr_eq(obj_object->val_obj_or_list->next, val3);
+    ck_assert_ptr_eq(obj_object->last, val3);
+
+    // reset a key that already exist (in first position)
+    _OK(tm_infi_object_set(obj_object, "key1", val4));
+    ck_assert_uint_eq(obj_object->val_size, 2);
+    ck_assert_ptr_eq(obj_object->val_obj_or_list, val4);
+    ck_assert_ptr_eq(obj_object->val_obj_or_list->next, val3);
+
+    // add yet another object
+    _OK(tm_infi_object_set(obj_object, "key5", val5));
+    ck_assert_uint_eq(obj_object->val_size, 3);
+    ck_assert_ptr_eq(obj_object->val_obj_or_list->next->next, val5);
+    ck_assert_ptr_eq(obj_object->last, val5);
+}
+END_TEST
+
+START_TEST(test_infi_object_get) {
+    tm_infi_t* val = tm_infi_integer_new(INT_VALUE);
+    _OK(tm_infi_object_set(obj_object, "key1", val));
+    tm_infi_t* val2 = tm_infi_integer_new(INT_VALUE);
+    _OK(tm_infi_object_set(obj_object, "key2", val2));
+    tm_infi_t* val3 = tm_infi_integer_new(INT_VALUE);
+    _OK(tm_infi_object_set(obj_object, "key3", val3));
+
+    ck_assert_uint_eq(obj_object->val_size, 3);
+
+    // get first
+    tm_infi_t* elm;
+    _OK(tm_infi_object_get(obj_object, "key1", &elm));
+    ck_assert_ptr_eq(elm, val);
+
+    // get second
+    _OK(tm_infi_object_get(obj_object, "key2", &elm));
+    ck_assert_ptr_eq(elm, val2);
+
+    // get last
+    _OK(tm_infi_object_get(obj_object, "key3", &elm));
+    ck_assert_ptr_eq(elm, val3);
+
+    // get non-existing
+    _NOK(tm_infi_object_get(obj_object, "whatever", &elm));
+}
+END_TEST
+
 void add_test_cases(Suite* s) {
     // boolean
     TCase* tc_boolean = tcase_create("booleans");
@@ -244,4 +326,12 @@ void add_test_cases(Suite* s) {
     tcase_add_test(tc_array, test_infi_array_length);
 
     suite_add_tcase(s, tc_array);
+
+    // objects
+    TCase* tc_object = tcase_create("objects");
+    tcase_add_checked_fixture(tc_object, setup_object, teardown_object);
+    tcase_add_test(tc_object, test_infi_object_set);
+    tcase_add_test(tc_object, test_infi_object_get);
+
+    suite_add_tcase(s, tc_object);
 }
