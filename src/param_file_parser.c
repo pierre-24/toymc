@@ -1,4 +1,5 @@
 #include "param_file_parser.h"
+#include <ctype.h>
 
 int lexer_translator[] = {
         0x20, TM_TK_WHITESPACE,
@@ -72,6 +73,7 @@ int tm_parf_lexer(tm_parf_token *tk, char *input, int position) {
  * Advance to the next token if the current one if of type \p t
  * @pre \code{.c}
  * tk != NULL && input != NULL
+ * && 0 <= tk->position < strlen(input)
  * \endcode
  * @param tk valid token
  * @param input input string
@@ -90,6 +92,7 @@ int _eat(tm_parf_token *tk, char *input, tm_parf_token_type t) {
  * Advance to the next token until one is of type \p t.
  * @pre \code{.c}
  * tk != NULL && input != NULL
+ * && 0 <= tk->position < strlen(input)
  * \endcode
  * @param tk valid token
  * @param input input string
@@ -98,7 +101,7 @@ int _eat(tm_parf_token *tk, char *input, tm_parf_token_type t) {
  * @return 0 if token was of type \p t, something else otherwise
  */
 int _skip(tm_parf_token *tk, char *input, tm_parf_token_type t) {
-    int r = 0;
+    int r;
 
     while (tk->type == t) {
         r = tm_parf_lexer(tk, input, tk->position + 1);
@@ -113,6 +116,7 @@ int _skip(tm_parf_token *tk, char *input, tm_parf_token_type t) {
  * Parse a string. Caller \b must free it.
  * @pre \code{.c}
  * tk != NULL && input != NULL && error != NULL
+ * && 0 <= tk->position < strlen(input)
  * \endcode
  * @param tk valid token
  * @param input input string
@@ -166,12 +170,13 @@ char* _parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
 /**
  * Parse a string: \code string := QUOTE (NOT_QUOTE | BACKSLASH QUOTE)* QUOTE; \endcode
  * @pre \code{.c}
- * tk != NULL && input != NULL
+ * tk != NULL && input != NULL && error != NULL
+ * && 0 <= tk->position < strlen(input)
  * \endcode
  * @param tk valid token
  * @param input input string
  * @param error error, if any
- * @return \p NULL if there was an error, the object (of type \p TM_parf_STRING)  otherwise
+ * @return \p NULL if there was an error, the object (of type \p TM_T_STRING)  otherwise
  */
 tm_parf_t* tm_parf_parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
     tm_parf_t* object = NULL;
@@ -196,11 +201,12 @@ tm_parf_t* tm_parf_parse_string(tm_parf_token* tk, char* input, tm_parf_error* e
  * In the end, \p strtol and \p strtod are used to parse the number.
  * @pre \code{.c}
  * tk != NULL && input != NULL && error != NULL
+ * && 0 <= tk->position < strlen(input)
  * \endcode
  * @param tk valid token
  * @param input input string
  * @param error error, if any
- * @return \p NULL if there was an error, the object (of type \p TM_parf_REAL or \p TM_parf_INTEGER) otherwise
+ * @return \p NULL if there was an error, the object (of type \p TM_T_REAL or \p TM_T_INTEGER) otherwise
  */
 tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* error) {
     char* beg = tk->value;
@@ -261,11 +267,12 @@ tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* e
  * \endcode
  * @pre \code{.c}
  * tk != NULL && input != NULL && error != NULL
+ * && 0 <= tk->position < strlen(input)
  * \endcode
  * @param tk valid token
  * @param input input string
  * @param error error, if any
- * @return \p NULL if there was an error, the object (of type \p TM_parf_BOOLEAN)  otherwise
+ * @return \p NULL if there was an error, the object (of type \p TM_T_BOOLEAN)  otherwise
  */
 tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* error) {
     if (tk->type != TM_TK_CHAR) {
@@ -317,15 +324,16 @@ tm_parf_t* tm_parf_parse_value(tm_parf_token* tk, char* input, tm_parf_error* er
  * \endcode
  * @pre \code{.c}
  * tk != NULL && input != NULL && error != NULL
+ * && 0 <= tk->position < strlen(input)
  * \endcode
  * @param tk valid token
  * @param input input string
  * @param error error, if any
- * @return \p NULL if there was an error, the object (of type \p TM_parf_LIST) otherwise
+ * @return \p NULL if there was an error, the object (of type \p TM_T_LIST) otherwise
  */
 tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* error) {
     if (_eat(tk, input, TM_TK_LBRACKET) != 0) {
-        error->what = "expected left bracket to begin an array";
+        error->what = "expected left bracket to begin list";
         error->position = tk->position;
         return NULL;
     }
@@ -334,23 +342,13 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
     tm_parf_t* val;
     int first = 1;
 
+    _skip(tk, input, TM_TK_WHITESPACE);
+
     while (tk->type != TM_TK_RBRACKET && tk->type != TM_TK_EOS) {
-        if (first) {
-            first = 0;
-        } else if (_eat(tk, input, TM_TK_COMMA) != 0) {
-            tm_parf_delete(object);
-            error->what = "expected comma in array";
-            error->position = tk->position;
-            tm_parf_delete(object);
-            return NULL;
-        }
-
-        _skip(tk, input, TM_TK_WHITESPACE);
-
         val = tm_parf_parse_value(tk, input, error);
 
         if (val == NULL) {
-            error->what = "was not able to create value for array";
+            error->what = "was not able to get value in list";
             error->position = tk->position;
             tm_parf_delete(object);
             return NULL;
@@ -362,7 +360,7 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
     }
 
     if(_eat(tk, input, TM_TK_RBRACKET) != 0) {
-        error->what = "expected right bracket to end array";
+        error->what = "expected right bracket to end list";
         error->position = tk->position;
         tm_parf_delete(object);
         return NULL;
@@ -378,6 +376,7 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
  * \endcode
  * @pre \code{.c}
  * tk != NULL && input != NULL && error != NULL
+ * && 0 <= tk->position < strlen(input)
  * \endcode
  * @param tk valid token
  * @param input input string
@@ -413,4 +412,132 @@ tm_parf_t *tm_parf_parse_value(tm_parf_token *tk, char *input, tm_parf_error *er
     }
 
     return object;
+}
+
+/**
+ * Parse a name literal (i.e., a key). Caller must free the string.
+ * \code
+ * NAME_LITERAL := (DIGIT | CHAR_LIT)*;
+ * CHAR_LIT := [a-zA-Z_-];
+ * \endcode
+ * @pre \code{.c}
+ * tk != NULL && input != NULL && error != NULL
+ * && 0 <= tk->position < strlen(input)
+ * \endcode
+ * @param tk valid token
+ * @param input input string
+ * @param error error, if any
+ * @return \p NULL if there was an error, the name otherwise.
+ */
+char* _parse_name_lit(tm_parf_token* tk, char* input, tm_parf_error* error) {
+    if (!isalnum(input[tk->position]) && input[tk->position] != '_' && input[tk->position] != '-') {
+        error->what = "expected alpha or underscore to start the name literal";
+        error->position = tk->position;
+        return NULL;
+    }
+
+    int sz = 0;
+    int mul = 64;
+    int fac = 1;
+    char* tmp = malloc(fac * mul * sizeof(char));
+
+    while (isalnum(input[tk->position]) || input[tk->position] == '_'  || input[tk->position] == '-') {
+        tmp[sz] = *(tk->value);
+        sz++;
+
+        if (sz == fac*mul) {
+            fac++;
+            tmp = realloc(tmp, fac * mul * sizeof(char));
+        }
+
+        tm_parf_lexer(tk, input, tk->position + 1);
+    }
+
+    tmp[sz] = '\0';
+    return tmp;
+}
+
+
+
+/**
+ * Skip comments
+ * \code
+ * COMMENT := '#' NOT_NL* NL
+ * \endcode
+ * @pre \code{.c}
+ * tk != NULL && input != NULL
+ * && 0 <= tk->position < strlen(input)
+ * \endcode
+ * @param tk valid token
+ * @param input input string
+ * @return 0 if everthing went ok, something else otherwise
+ */
+int _skip_comment(tm_parf_token *tk, char *input) {
+    if (_eat(tk, input, TM_TK_COMMENT) != 0) // that is not a comment?!?
+        return -1;
+
+    int r = 0;
+    while (tk->type != TM_TK_EOS && *(tk->value) != '\n') {
+        r = tm_parf_lexer(tk, input, tk->position + 1);
+        if (r < 0)
+            return r;
+    }
+
+    return _skip(tk, input, TM_TK_WHITESPACE);
+}
+
+/**
+ * Parse a string representing an object.
+ * \code
+ * OBJECT := (COMMENT | NAME_LITERAL VALUE)* EOS;
+ * \endcode
+ * @pre \code{.c}
+ * input != NULL && error != NULL
+ * \endcode
+ * @param input the input
+ * @param error an eventual error
+ * @return \p NULL if there was an error, the object (of type \p TM_T_OBJECT) otherwise
+ */
+tm_parf_t* tm_parf_loads(char* input, tm_parf_error* error) {
+    if(input == NULL || error == NULL) {
+        error->what = "input or error is NULL";
+        error->position = 0;
+        return NULL;
+    }
+
+    tm_parf_token tk;
+    tm_parf_t* obj = tm_parf_object_new();
+
+    // bootstrap
+    tm_parf_lexer(&tk, input, 0);
+    _skip(&tk, input, TM_TK_WHITESPACE);
+
+    // read the stuff
+    while(tk.type != TM_TK_EOS) {
+        if(tk.type == TM_TK_COMMENT)
+            _skip_comment(&tk, input);
+        else {
+            char* key = _parse_name_lit(&tk, input, error);
+            if(key == NULL) {
+                tm_parf_delete(obj);
+                return NULL;
+            }
+
+            _skip(&tk, input, TM_TK_WHITESPACE);
+
+            tm_parf_t* value = tm_parf_parse_value(&tk, input, error);
+            if (value == NULL) {
+                free(key);
+                tm_parf_delete(obj);
+                return NULL;
+            }
+
+            tm_parf_object_set(obj, key, value);
+            free(key);
+        }
+
+        _skip(&tk, input, TM_TK_WHITESPACE);
+    }
+
+    return obj;
 }

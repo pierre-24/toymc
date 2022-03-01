@@ -183,7 +183,7 @@ START_TEST(test_parser_list) {
     };
     tm_parf_token t;
 
-    sprintf(tmp, "[%d, %d, %d]", value[0], value[1], value[2]);
+    sprintf(tmp, "[%d %d %d]", value[0], value[1], value[2]);
 
     tm_parf_t* obj_list = parse_list(&t, tmp);
     tm_parf_t* obj;
@@ -208,9 +208,10 @@ START_TEST(test_parser_list) {
     char* wrong_examples[] = {
             "[",
             "[2",
-            "[2,",
-            "[2,x",
-            "[2,3"
+            "[2 [1 2]",
+            "[2 [1 2",
+            "[2 x",
+            "[2 3"
     };
 
     int sz = sizeof(wrong_examples) / sizeof(*wrong_examples);
@@ -219,6 +220,54 @@ START_TEST(test_parser_list) {
     }
 }
 END_TEST
+
+START_TEST(test_parser_object) {
+    char tmp[100];
+    char* key[] = {
+            "1key", "_key2", "key-3"
+    };
+    int value[] = {
+            3, 42, -6
+    };
+    tm_parf_error e;
+
+    sprintf(tmp, "%s %d %s %d # comment\n%s %d", key[0], value[0], key[1], value[1], key[2], value[2]);
+
+    tm_parf_t* obj_object = tm_parf_loads(tmp, &e);
+    tm_parf_t* elmt;
+
+    tm_parf_iterator * it = tm_parf_iterator_new(obj_object);
+    int i = 0, val;
+
+    while(tm_parf_iterator_has_next(it)) {
+        _OK(tm_parf_iterator_next(it, &elmt));
+        _OK(tm_parf_integer_value(elmt, &val));
+        ck_assert_int_eq(val, value[i]);
+        ck_assert_str_eq(elmt->key, key[i]);
+        i++;
+    }
+
+    ck_assert_int_eq(i, 3);
+
+    tm_parf_delete(obj_object);
+    tm_parf_iterator_delete(it);
+
+    // non-working stuffs
+    char* wrong_examples[] = {
+            "a", // missing value
+            "a x", // unexpected token CHAR
+            "a [2", // missing RBRACKET
+            "a \"x", // missing QUOTE
+            "a 2 b2" // that does not work since b2 is considered as a literal name, missing value
+    };
+
+    int sz = sizeof(wrong_examples) / sizeof(*wrong_examples);
+    for(i=0; i < sz; i++) {
+        ck_assert_ptr_null(tm_parf_loads(wrong_examples[i], &e));
+    }
+}
+END_TEST
+
 
 void add_tests_param_file_parser_cases(Suite* s) {
     // lexer
@@ -233,6 +282,7 @@ void add_tests_param_file_parser_cases(Suite* s) {
     tcase_add_test(tc_parser, test_parser_number);
     tcase_add_test(tc_parser, test_parser_boolean);
     tcase_add_test(tc_parser, test_parser_list);
+    tcase_add_test(tc_parser, test_parser_object);
 
     suite_add_tcase(s, tc_parser);
 }

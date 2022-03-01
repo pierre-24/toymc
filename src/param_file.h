@@ -10,7 +10,7 @@
 #include <string.h>
 
 #define TM_parf_IS(o,t) ((o)->val_type == (t))
-#define TM_parf_CHECK_P(o,t) ((o) == NULL || (o)->val_type != (t))
+#define TM_PARF_CHECK_P(o,t) ((o) == NULL || (o)->val_type != (t))
 
 typedef enum tm_parf_type_ {
     TM_T_LIST,
