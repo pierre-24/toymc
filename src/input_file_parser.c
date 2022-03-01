@@ -254,4 +254,56 @@ tm_infi_t* tm_infi_parse_number(tm_infi_token* tk, char* input, tm_infi_error* e
     return obj;
 }
 
+/**
+ * Parse a boolean:
+ * \code
+ * BOOLEAN := "true" | "false";
+ * \endcode
+ * @pre \code{.c}
+ * tk != NULL && input != NULL && error != NULL
+ * \endcode
+ * @param tk valid token
+ * @param input input string
+ * @param error error, if any
+ * @return NULL if there was an error, the object (of type \p TM_INFI_BOOLEAN)  otherwise
+ */
+tm_infi_t* tm_infi_parse_boolean(tm_infi_token* tk, char* input, tm_infi_error* error) {
+    if (tk->type != TM_TK_CHAR) {
+        error->what = "expected a character for boolean";
+        error->position = tk->position;
+        return NULL;
+    }
 
+    char* expected;
+    tm_infi_t* object = NULL;
+
+    if (input[tk->position] == 't') { // true ?
+        expected = "true";
+        object = tm_infi_boolean_new(1);
+    } else if (input[tk->position] == 'f') { // false ?
+        expected = "false";
+        object = tm_infi_boolean_new(0);
+    } else {
+        error->what = "expected a character for boolean";
+        error->position = tk->position;
+        return NULL;
+    }
+
+    if(object != NULL) {
+        int i = 0;
+
+        while (expected[i] != '\0') {
+            if (tk->type != TM_TK_CHAR || *(tk->value) != expected[i]) {
+                tm_infi_delete(object);
+                error->what = "unexpected token in boolean";
+                error->position = tk->position;
+                return NULL;
+            }
+
+            tm_infi_lexer(tk, input, tk->position + 1);
+            i++;
+        }
+    }
+
+    return object;
+}

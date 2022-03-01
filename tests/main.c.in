@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <check.h>
-#include "tests.h"
+#include "${TEST_FILENAME}.h"
 
 int main(int argc, char* argv[]) {
     Suite* s = suite_create("${TEST_DESCRIPTION}");
 
     // add suite
-    add_test_cases(s);
+    add_${TEST_FILENAME}_cases(s);
 
     // run suite
     SRunner *sr = srunner_create(s) ;

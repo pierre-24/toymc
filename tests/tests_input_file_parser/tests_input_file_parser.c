@@ -1,5 +1,6 @@
 #include <check.h>
 #include "input_file_parser.h"
+#include "tests_input_file_parser.h"
 
 #define _OK(v) ck_assert_int_eq(v, 0)
 #define _NOK(v) ck_assert_int_ne(v, 0)
@@ -7,6 +8,7 @@
 int tm_infi_lexer(tm_infi_token *tk, char *input, int position);
 tm_infi_t* tm_infi_parse_string(tm_infi_token* tk, char* input, tm_infi_error* error);
 tm_infi_t* tm_infi_parse_number(tm_infi_token* tk, char* input, tm_infi_error* error);
+tm_infi_t* tm_infi_parse_boolean(tm_infi_token* tk, char* input, tm_infi_error* error);
 
 tm_infi_t *parse_string(tm_infi_token *t, char *input) {
     tm_infi_error e;
@@ -18,6 +20,12 @@ tm_infi_t *parse_number(tm_infi_token *t, char *input) {
     tm_infi_error e;
     _OK(tm_infi_lexer(t, input, 0));
     return tm_infi_parse_number(t, input, &e);
+}
+
+tm_infi_t *parse_boolean(tm_infi_token *t, char *input) {
+    tm_infi_error e;
+    _OK(tm_infi_lexer(t, input, 0));
+    return tm_infi_parse_boolean(t, input, &e);
 }
 
 START_TEST(test_lexer) {
@@ -127,7 +135,42 @@ START_TEST(test_parser_number) {
 }
 END_TEST
 
-void add_test_cases(Suite* s) {
+START_TEST(test_parser_boolean) {
+    tm_infi_token t;
+    int found;
+
+    // true
+    tm_infi_t* obj = parse_boolean(&t, "true");
+    _OK(tm_infi_boolean_value(obj, &found));
+    ck_assert_int_eq(found, 1);
+    ck_assert_int_eq(t.type, TM_TK_EOS);
+
+    tm_infi_delete(obj);
+
+    // false
+    obj = parse_boolean(&t, "false");
+    _OK(tm_infi_boolean_value(obj, &found));
+    ck_assert_int_eq(found, 0);
+    ck_assert_int_eq(t.type, TM_TK_EOS);
+
+    tm_infi_delete(obj);
+
+    // non-working stuffs
+    char* wrong_examples[] = {
+            "xy",
+            "tru",
+            "folse",
+            "+true"
+    };
+
+    int sz = sizeof(wrong_examples) / sizeof(*wrong_examples);
+    for(int i=0; i < sz; i++) {
+        ck_assert_ptr_null(parse_boolean(&t, wrong_examples[i]));
+    }
+}
+END_TEST
+
+void add_tests_input_file_parser_cases(Suite* s) {
     // lexer
     TCase* tc_lexer = tcase_create("lexer");
     tcase_add_test(tc_lexer, test_lexer);
@@ -138,6 +181,7 @@ void add_test_cases(Suite* s) {
     TCase* tc_parser = tcase_create("parser");
     tcase_add_test(tc_parser, test_parser_string);
     tcase_add_test(tc_parser, test_parser_number);
+    tcase_add_test(tc_parser, test_parser_boolean);
 
     suite_add_tcase(s, tc_parser);
 }

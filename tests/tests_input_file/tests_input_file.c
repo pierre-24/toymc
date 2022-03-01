@@ -1,5 +1,6 @@
 #include <check.h>
 #include "input_file.h"
+#include "tests_input_file.h"
 
 /* Booleans */
 #define BOOLEAN_VALUE 1
@@ -344,7 +345,7 @@ START_TEST(test_infi_object_iterate) {
 }
 END_TEST
 
-void add_test_cases(Suite* s) {
+void add_tests_input_file_cases(Suite* s) {
     // boolean
     TCase* tc_boolean = tcase_create("booleans");
     tcase_add_checked_fixture(tc_boolean, setup_boolean, teardown_boolean);

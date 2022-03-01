@@ -3,6 +3,6 @@
 
 #include <check.h>
 
-void tests_suite(Suite* s);
+void add_${TEST_FILENAME}_cases(Suite* s);
 
 #endif //TOYMC_TESTS_H
