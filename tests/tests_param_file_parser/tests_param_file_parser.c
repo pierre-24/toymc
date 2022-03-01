@@ -161,6 +161,22 @@ START_TEST(test_parser_boolean) {
 
     tm_parf_delete(obj);
 
+    // yes
+    obj = parse_boolean(&t, "yes");
+    _OK(tm_parf_boolean_value(obj, &found));
+    ck_assert_int_eq(found, 1);
+    ck_assert_int_eq(t.type, TM_TK_EOS);
+
+    tm_parf_delete(obj);
+
+    // no
+    obj = parse_boolean(&t, "no");
+    _OK(tm_parf_boolean_value(obj, &found));
+    ck_assert_int_eq(found, 0);
+    ck_assert_int_eq(t.type, TM_TK_EOS);
+
+    tm_parf_delete(obj);
+
     // non-working stuffs
     char* wrong_examples[] = {
             "xy",

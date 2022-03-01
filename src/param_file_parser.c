@@ -263,7 +263,7 @@ tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* e
 /**
  * Parse a boolean:
  * \code
- * BOOLEAN := "true" | "false";
+ * BOOLEAN := "true" | "false" | "yes" | "no";
  * \endcode
  * @pre \code{.c}
  * tk != NULL && input != NULL && error != NULL
@@ -290,8 +290,14 @@ tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* 
     } else if (input[tk->position] == 'f') { // false ?
         expected = "false";
         object = tm_parf_boolean_new(0);
+    } else if (input[tk->position] == 'y') { // yes ?
+        expected = "yes";
+        object = tm_parf_boolean_new(1);
+    } else if (input[tk->position] == 'n') { // no ?
+        expected = "no";
+        object = tm_parf_boolean_new(0);
     } else {
-        error->what = "expected a character for boolean";
+        error->what = "expected t, f, y or n for boolean";
         error->position = tk->position;
         return NULL;
     }
