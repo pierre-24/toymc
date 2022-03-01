@@ -1,4 +1,4 @@
-#include "input_file.h"
+#include "param_file.h"
 
 /* objects */
 
@@ -8,9 +8,9 @@
  * @post object is initialized with type \p t.
  * @return the initialized object, or \p NULL if malloc failed
  */
-tm_infi_t* tm_infi_new(tm_infi_type t) {
-    tm_infi_t* j = NULL;
-    j = malloc(sizeof(tm_infi_t));
+tm_parf_t* tm_parf_new(tm_parf_type t) {
+    tm_parf_t* j = NULL;
+    j = malloc(sizeof(tm_parf_t));
     if (j != NULL) {
         j->val_type = t;
 
@@ -31,13 +31,13 @@ tm_infi_t* tm_infi_new(tm_infi_type t) {
  * @param obj the object to delete
  * @return 0 if the object was delete, something else otherwise
  */
-int tm_infi_delete(tm_infi_t* obj) {
+int tm_parf_delete(tm_parf_t* obj) {
     if(obj == NULL)
         return -1;
 
     int r = 0;
     if(obj->next != NULL)
-        r = tm_infi_delete(obj->next);
+        r = tm_parf_delete(obj->next);
 
     if (r < 0)
         return r;
@@ -45,11 +45,11 @@ int tm_infi_delete(tm_infi_t* obj) {
     if(obj->key != NULL)
         free(obj->key);
 
-    if(TM_INFI_IS(obj, TM_T_STRING) && obj->val_str != NULL)
+    if(TM_parf_IS(obj, TM_T_STRING) && obj->val_str != NULL)
         free(obj->val_str);
 
-    if ((TM_INFI_IS(obj, TM_T_OBJECT) || TM_INFI_IS(obj, TM_T_LIST)) && obj->val_obj_or_list != NULL)
-        r = tm_infi_delete(obj->val_obj_or_list);
+    if ((TM_parf_IS(obj, TM_T_OBJECT) || TM_parf_IS(obj, TM_T_LIST)) && obj->val_obj_or_list != NULL)
+        r = tm_parf_delete(obj->val_obj_or_list);
 
     if (r < 0)
         return r;
@@ -63,8 +63,8 @@ int tm_infi_delete(tm_infi_t* obj) {
  * Create an input file object of type \p TM_T_OBJECT
  * @return the initialized object, or \p NULL if malloc failed
  */
-tm_infi_t* tm_infi_object_new() {
-    tm_infi_t* o = tm_infi_new(TM_T_OBJECT);
+tm_parf_t* tm_parf_object_new() {
+    tm_parf_t* o = tm_parf_new(TM_T_OBJECT);
     if(o != NULL)
         o->val_size = 0;
 
@@ -75,7 +75,7 @@ tm_infi_t* tm_infi_object_new() {
 /**
  * Set value at \p key to \p val
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_OBJECT)
+ * obj != NULL && TM_parf_CHECK_P(obj, TM_T_OBJECT)
  * && key != NULL
  * \endcode
  * @param obj the object
@@ -84,8 +84,8 @@ tm_infi_t* tm_infi_object_new() {
  * @post value at key \p key is set to \p val
  * @return 0 if the value is set, something else otherwise
  */
-int tm_infi_object_set(tm_infi_t* obj, char* key, tm_infi_t* val) {
-    if (TM_INFI_CHECK_P(obj, TM_T_OBJECT))
+int tm_parf_object_set(tm_parf_t* obj, char* key, tm_parf_t* val) {
+    if (TM_parf_CHECK_P(obj, TM_T_OBJECT))
         return -1;
 
     if(key == NULL || val == NULL)
@@ -100,13 +100,13 @@ int tm_infi_object_set(tm_infi_t* obj, char* key, tm_infi_t* val) {
 
 
     // value
-    tm_infi_t* o = obj->val_obj_or_list, *prev = NULL;
+    tm_parf_t* o = obj->val_obj_or_list, *prev = NULL;
     int set = 0;
     while (o != NULL) { // look first if it does exist
         if(strcmp(o->key, key) == 0) {
             val->next = o->next;
             o->next = NULL;
-            tm_infi_delete(o);
+            tm_parf_delete(o);
             if(prev == NULL)
                 obj->val_obj_or_list = val;
             else
@@ -139,7 +139,7 @@ int tm_infi_object_set(tm_infi_t* obj, char* key, tm_infi_t* val) {
 /**
  * Get the value with key \p key
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_OBJECT)
+ * obj != NULL && TM_parf_CHECK_P(obj, TM_T_OBJECT)
  * && key != NULL
  * \endcode
  * @param object the object
@@ -148,11 +148,11 @@ int tm_infi_object_set(tm_infi_t* obj, char* key, tm_infi_t* val) {
  * @post \p val point on the value
  * @return 0 if the object was found, something else otherwise
  */
-int tm_infi_object_get(tm_infi_t* obj, char* key, tm_infi_t** val) {
-    if (TM_INFI_CHECK_P(obj, TM_T_OBJECT))
+int tm_parf_object_get(tm_parf_t* obj, char* key, tm_parf_t** val) {
+    if (TM_parf_CHECK_P(obj, TM_T_OBJECT))
         return -1;
 
-    tm_infi_t* o = obj->val_obj_or_list;
+    tm_parf_t* o = obj->val_obj_or_list;
     while (o != NULL) {
         if (strcmp(o->key, key) == 0) {
             *val = o;
@@ -171,10 +171,10 @@ int tm_infi_object_get(tm_infi_t* obj, char* key, tm_infi_t** val) {
  * Create an input file object of type \p TM_T_BOOLEAN
  * @return the initialized object, or \p NULL if malloc failed
  */
-tm_infi_t* tm_infi_boolean_new(int val) {
-    tm_infi_t* o = tm_infi_new(TM_T_BOOLEAN);
+tm_parf_t* tm_parf_boolean_new(int val) {
+    tm_parf_t* o = tm_parf_new(TM_T_BOOLEAN);
     if(o != NULL)
-        tm_infi_boolean_set(o, val);
+        tm_parf_boolean_set(o, val);
 
     return o;
 }
@@ -182,15 +182,15 @@ tm_infi_t* tm_infi_boolean_new(int val) {
 /**
  * Change the value
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_BOOLEAN)
+ * obj != NULL && TM_parf_CHECK_P(obj, TM_T_BOOLEAN)
  * \endcode
  * @param object the boolean object
  * @param val new value
  * @post object is set to \p val
  * @return 0 if the value is set, something else otherwise
  */
-int tm_infi_boolean_set(tm_infi_t* object, int val) {
-    if (TM_INFI_CHECK_P(object, TM_T_BOOLEAN))
+int tm_parf_boolean_set(tm_parf_t* object, int val) {
+    if (TM_parf_CHECK_P(object, TM_T_BOOLEAN))
         return -1;
 
     object->val_int = val;
@@ -200,15 +200,15 @@ int tm_infi_boolean_set(tm_infi_t* object, int val) {
 /**
  * Get the value
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_BOOLEAN)
+ * obj != NULL && TM_parf_CHECK_P(obj, TM_T_BOOLEAN)
  * \endcode
  * @param object the boolean object
  * @param value the value
  * @post \p value contains the value
  * @return 0 if everything went well, something else otherwise
  */
-int tm_infi_boolean_value(tm_infi_t* object, int* value) {
-    if (TM_INFI_CHECK_P(object, TM_T_BOOLEAN))
+int tm_parf_boolean_value(tm_parf_t* object, int* value) {
+    if (TM_parf_CHECK_P(object, TM_T_BOOLEAN))
         return -1;
 
     *value = object->val_int;
@@ -221,25 +221,25 @@ int tm_infi_boolean_value(tm_infi_t* object, int* value) {
  * Create an input file object of type \p TM_T_INTEGER
  * @return the initialized object, or \p NULL if malloc failed
  */
-tm_infi_t* tm_infi_integer_new(int val) {
-    tm_infi_t* o = tm_infi_new(TM_T_INTEGER);
+tm_parf_t* tm_parf_integer_new(int val) {
+    tm_parf_t* o = tm_parf_new(TM_T_INTEGER);
     if(o != NULL)
-        tm_infi_integer_set(o, val);
+        tm_parf_integer_set(o, val);
     return o;
 }
 
 /**
  * Change the value
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_INTEGER)
+ * obj != NULL && TM_parf_CHECK_P(obj, TM_T_INTEGER)
  * \endcode
  * @param object the integer object
  * @param val new value
  * @post object is set to \p val
  * @return 0 if the value is set, something else otherwise
  */
-int tm_infi_integer_set(tm_infi_t* object, int val) {
-    if (TM_INFI_CHECK_P(object, TM_T_INTEGER))
+int tm_parf_integer_set(tm_parf_t* object, int val) {
+    if (TM_parf_CHECK_P(object, TM_T_INTEGER))
         return -1;
 
     object->val_int = val;
@@ -249,15 +249,15 @@ int tm_infi_integer_set(tm_infi_t* object, int val) {
 /**
  * Get the value
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_INTEGER)
+ * obj != NULL && TM_parf_CHECK_P(obj, TM_T_INTEGER)
  * \endcode
  * @param object the integer object
  * @param value the value
  * @post \p value contains the value
  * @return 0 if everything went well, something else otherwise
  */
-int tm_infi_integer_value(tm_infi_t* object, int* value) {
-    if (TM_INFI_CHECK_P(object, TM_T_INTEGER))
+int tm_parf_integer_value(tm_parf_t* object, int* value) {
+    if (TM_parf_CHECK_P(object, TM_T_INTEGER))
         return -1;
 
     *value = object->val_int;
@@ -270,25 +270,25 @@ int tm_infi_integer_value(tm_infi_t* object, int* value) {
  * Create an input file object of type \p TM_T_REAL
  * @return the initialized object, or \p NULL if malloc failed
  */
-tm_infi_t* tm_infi_real_new(double val) {
-    tm_infi_t *o = tm_infi_new(TM_T_REAL);
+tm_parf_t* tm_parf_real_new(double val) {
+    tm_parf_t *o = tm_parf_new(TM_T_REAL);
     if (o != NULL)
-        tm_infi_real_set(o, val);
+        tm_parf_real_set(o, val);
     return o;
 }
 
 /**
  * Change the value
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_REAL)
+ * obj != NULL && TM_parf_CHECK_P(obj, TM_T_REAL)
  * \endcode
  * @param object the real object
  * @param val new value
  * @post object is set to \p val
  * @return 0 if the value is set, something else otherwise
  */
-int tm_infi_real_set(tm_infi_t* object, double val) {
-    if (TM_INFI_CHECK_P(object, TM_T_REAL))
+int tm_parf_real_set(tm_parf_t* object, double val) {
+    if (TM_parf_CHECK_P(object, TM_T_REAL))
         return -1;
 
     object->val_real = val;
@@ -298,15 +298,15 @@ int tm_infi_real_set(tm_infi_t* object, double val) {
 /**
  * Get the value
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_REAL)
+ * obj != NULL && TM_parf_CHECK_P(obj, TM_T_REAL)
  * \endcode
  * @param object the real object
  * @param value the value
  * @post value contains the value
  * @return 0 if everything went well, something else otherwise
  */
-int tm_infi_real_value(tm_infi_t* object, double * value) {
-    if (TM_INFI_CHECK_P(object, TM_T_REAL))
+int tm_parf_real_value(tm_parf_t* object, double * value) {
+    if (TM_parf_CHECK_P(object, TM_T_REAL))
         return -1;
 
     *value = object->val_real;
@@ -322,10 +322,10 @@ int tm_infi_real_value(tm_infi_t* object, double * value) {
  * \endcode
  * @return the initialized object, or \p NULL if malloc failed
  */
-tm_infi_t* tm_infi_string_new(char* val) {
-    tm_infi_t* o = tm_infi_new(TM_T_STRING);
+tm_parf_t* tm_parf_string_new(char* val) {
+    tm_parf_t* o = tm_parf_new(TM_T_STRING);
     if(o != NULL)
-        tm_infi_string_set(o, val);
+        tm_parf_string_set(o, val);
 
     return o;
 }
@@ -333,7 +333,7 @@ tm_infi_t* tm_infi_string_new(char* val) {
 /**
  * Change the value of the string. Copy the string.
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_STRING)
+ * obj != NULL && TM_parf_CHECK_P(obj, TM_T_STRING)
  * && val != NULL
  * \endcode
  * @param object the string object
@@ -341,8 +341,8 @@ tm_infi_t* tm_infi_string_new(char* val) {
  * @post object is set to \p val
  * @return 0 if the value is set, something else otherwise
  */
-int tm_infi_string_set(tm_infi_t* object, char* val) {
-    if (TM_INFI_CHECK_P(object, TM_T_STRING))
+int tm_parf_string_set(tm_parf_t* object, char* val) {
+    if (TM_parf_CHECK_P(object, TM_T_STRING))
         return -1;
 
     if (val == NULL)
@@ -367,15 +367,15 @@ int tm_infi_string_set(tm_infi_t* object, char* val) {
 /**
  * Get the value of the string, as a pointer
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_STRING)
+ * obj != NULL && TM_parf_CHECK_P(obj, TM_T_STRING)
  * \endcode
  * @param object the string object
  * @param val a pointer to the value
  * @post \p val contains the value
  * @return 0 if everything went well, something else otherwise
  */
-int tm_infi_string_value(tm_infi_t* object, char **val) {
-    if (TM_INFI_CHECK_P(object, TM_T_STRING))
+int tm_parf_string_value(tm_parf_t* object, char **val) {
+    if (TM_parf_CHECK_P(object, TM_T_STRING))
         return -1;
 
     *val = object->val_str;
@@ -384,15 +384,15 @@ int tm_infi_string_value(tm_infi_t* object, char **val) {
 /**
  * Get the length of the string
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_STRING)
+ * obj != NULL && TM_parf_CHECK_P(obj, TM_T_STRING)
  * \endcode
  * @param obj the object
  * @param s the size
  * @post \p s is set to the size of the string
  * @return 0 if everything went well, something else otherwise
  */
-int tm_infi_string_length(tm_infi_t *object, unsigned int *s) {
-    if (TM_INFI_CHECK_P(object, TM_T_STRING))
+int tm_parf_string_length(tm_parf_t *object, unsigned int *s) {
+    if (TM_parf_CHECK_P(object, TM_T_STRING))
         return -1;
 
     if (object->val_str == NULL)
@@ -408,8 +408,8 @@ int tm_infi_string_length(tm_infi_t *object, unsigned int *s) {
  * Create an input file object of type \p TM_T_LIST
  * @return the initialized object, or \p NULL if malloc failed.
  */
-tm_infi_t* tm_infi_list_new() {
-    tm_infi_t* o = tm_infi_new(TM_T_LIST);
+tm_parf_t* tm_parf_list_new() {
+    tm_parf_t* o = tm_parf_new(TM_T_LIST);
     if(o != NULL)
         o->val_size = 0;
 
@@ -419,15 +419,15 @@ tm_infi_t* tm_infi_list_new() {
 /**
  * Append an element at the end of the list
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_LIST)
+ * obj != NULL && TM_parf_CHECK_P(obj, TM_T_LIST)
  * \endcode
  * @param obj the list
  * @param val the value to add
  * @post \p val is added to the list
  * @return 0 if the element was added, something else otherwise
  */
-int tm_infi_list_append(tm_infi_t* obj, tm_infi_t* val) {
-    if (TM_INFI_CHECK_P(obj, TM_T_LIST))
+int tm_parf_list_append(tm_parf_t* obj, tm_parf_t* val) {
+    if (TM_parf_CHECK_P(obj, TM_T_LIST))
         return -1;
 
     if(obj->val_obj_or_list == NULL) {
@@ -445,15 +445,15 @@ int tm_infi_list_append(tm_infi_t* obj, tm_infi_t* val) {
 /**
  * Get the length of the list
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_LIST)
+ * obj != NULL && TM_parf_CHECK_P(obj, TM_T_LIST)
  * \endcode
  * @param obj the object
  * @param sz the size
  * @post \p sz is set to the size of the list
  * @return 0 if everything went well, something else otherwise
  */
-int tm_infi_list_length(tm_infi_t* obj, unsigned int* sz) {
-    if (TM_INFI_CHECK_P(obj, TM_T_LIST))
+int tm_parf_list_length(tm_parf_t* obj, unsigned int* sz) {
+    if (TM_parf_CHECK_P(obj, TM_T_LIST))
         return -1;
 
     *sz = obj->val_size;
@@ -464,8 +464,8 @@ int tm_infi_list_length(tm_infi_t* obj, unsigned int* sz) {
  * Get element \p index. If \p index is negative, start from the last element.
  * @pre \code{.c}
  * obj != NULL
- * && TM_INFI_CHECK_P(obj, TM_T_LIST)
- * && (0 <= index < tm_infi_list_length(obj) || -tm_infi_list_length(obj) <= index < 0)
+ * && TM_parf_CHECK_P(obj, TM_T_LIST)
+ * && (0 <= index < tm_parf_list_length(obj) || -tm_parf_list_length(obj) <= index < 0)
  * \endcode
  * @param obj the list object
  * @param index the index
@@ -473,8 +473,8 @@ int tm_infi_list_length(tm_infi_t* obj, unsigned int* sz) {
  * @post \p val point to the object at index \p index, if there is such index.
  * @return 0 if there is an object at the requested index, something else otherwise
  */
-int tm_infi_list_get(tm_infi_t* obj, int index, tm_infi_t** val) {
-    if (TM_INFI_CHECK_P(obj, TM_T_LIST))
+int tm_parf_list_get(tm_parf_t* obj, int index, tm_parf_t** val) {
+    if (TM_parf_CHECK_P(obj, TM_T_LIST))
         return -1;
 
     if (index < 0)
@@ -483,7 +483,7 @@ int tm_infi_list_get(tm_infi_t* obj, int index, tm_infi_t** val) {
     if (index < 0 || index >= (int) obj->val_size)
         return -2;
 
-    tm_infi_t* o = obj->val_obj_or_list;
+    tm_parf_t* o = obj->val_obj_or_list;
     for(int i=0; i < index; i++) {
         if (o == NULL)
             return -3;
@@ -499,15 +499,15 @@ int tm_infi_list_get(tm_infi_t* obj, int index, tm_infi_t** val) {
 /**
  * Create an iterator
  * @pre \code{.c}
- * TM_INFI_CHECK_P(obj, TM_T_LIST) || TM_INFI_CHECK_P(obj, TM_T_OBJECT)
+ * TM_parf_CHECK_P(obj, TM_T_LIST) || TM_parf_CHECK_P(obj, TM_T_OBJECT)
  * \endcode
  * @return the initialized object, or \p NULL if malloc failed
  */
-tm_infi_iterator* tm_infi_iterator_new(tm_infi_t* obj) {
-    if (!TM_INFI_CHECK_P(obj, TM_T_LIST) && !TM_INFI_CHECK_P(obj, TM_T_OBJECT))
+tm_parf_iterator* tm_parf_iterator_new(tm_parf_t* obj) {
+    if (!TM_parf_CHECK_P(obj, TM_T_LIST) && !TM_parf_CHECK_P(obj, TM_T_OBJECT))
         return NULL;
 
-    tm_infi_iterator* it = malloc(sizeof(tm_infi_iterator));
+    tm_parf_iterator* it = malloc(sizeof(tm_parf_iterator));
     if(it != NULL) {
         it->obj = obj;
         it->next = obj->val_obj_or_list;
@@ -522,7 +522,7 @@ tm_infi_iterator* tm_infi_iterator_new(tm_infi_t* obj) {
  * @param it the iterator
  * @return 0 if the iterator was delete, something else otherwise
  */
-int tm_infi_iterator_delete(tm_infi_iterator* it) {
+int tm_parf_iterator_delete(tm_parf_iterator* it) {
     if(it == NULL)
         return -1;
 
@@ -535,14 +535,14 @@ int tm_infi_iterator_delete(tm_infi_iterator* it) {
  * @param it
  * @return 0 if \p it is \p NULL or if there is no next value, 1 otherwise
  * @example \code{.c}
- * tm_infi_iterator* it = tm_iterator_new(obj);
- * tm_infi_t* elmt;
- * while(tm_infi_operator_has_next(it)) {
- *  tm_infi_iterator_next(it, &obj);
+ * tm_parf_iterator* it = tm_iterator_new(obj);
+ * tm_parf_t* elmt;
+ * while(tm_parf_operator_has_next(it)) {
+ *  tm_parf_iterator_next(it, &obj);
  * }
  * \endcode
  */
-int tm_infi_iterator_has_next(tm_infi_iterator* it) {
+int tm_parf_iterator_has_next(tm_parf_iterator* it) {
     if(it == NULL)
         return 0;
 
@@ -551,13 +551,13 @@ int tm_infi_iterator_has_next(tm_infi_iterator* it) {
 
 /**
  * Get the next element (if there is one)
- * @pre \code{.c} it != NULL && tm_infi_iterator_has_next(it)\endcode
+ * @pre \code{.c} it != NULL && tm_parf_iterator_has_next(it)\endcode
  * @param it the iterator
  * @param obj the next element
  * @post \p it is iterated, \p obj is set if there was an element
  * @return 0 if there is an element, something else otherwise.
  */
-int tm_infi_iterator_next(tm_infi_iterator* it, tm_infi_t** obj) {
+int tm_parf_iterator_next(tm_parf_iterator* it, tm_parf_t** obj) {
     if(it == NULL)
         return -1;
 

@@ -1,6 +1,6 @@
 set(LIB_SOURCES
-        input_file.c
-        input_file_parser.c)
+        param_file.c
+        param_file_parser.c)
 
 set(PROG_SOURCES
         main.c)

@@ -1,4 +1,4 @@
-#include "input_file_parser.h"
+#include "param_file_parser.h"
 
 int lexer_translator[] = {
         0x20, TM_TK_WHITESPACE,
@@ -40,7 +40,7 @@ int lexer_translator[] = {
  * @param position position
  * @return 0 if everything went well, something else otherwise
  */
-int tm_infi_lexer(tm_infi_token *tk, char *input, int position) {
+int tm_parf_lexer(tm_parf_token *tk, char *input, int position) {
     if (tk == NULL || input == NULL)
         return -1;
 
@@ -48,7 +48,7 @@ int tm_infi_lexer(tm_infi_token *tk, char *input, int position) {
         return -1;
 
     char c = input[position];
-    tm_infi_token_type t = TM_TK_CHAR;
+    tm_parf_token_type t = TM_TK_CHAR;
 
     int* tr = lexer_translator;
     while (*tr != -1) {
@@ -79,11 +79,11 @@ int tm_infi_lexer(tm_infi_token *tk, char *input, int position) {
  * @post if token is of type \p t, advance to the next token
  * @return 0 if token was of type \p t, something else otherwise
  */
-int _eat(tm_infi_token *tk, char *input, tm_infi_token_type t) {
+int _eat(tm_parf_token *tk, char *input, tm_parf_token_type t) {
     if (tk->type != t)
         return -1;
 
-    return tm_infi_lexer(tk, input, tk->position + 1);
+    return tm_parf_lexer(tk, input, tk->position + 1);
 }
 
 /**
@@ -97,11 +97,11 @@ int _eat(tm_infi_token *tk, char *input, tm_infi_token_type t) {
  * @post the token is of type \p t
  * @return 0 if token was of type \p t, something else otherwise
  */
-int _skip(tm_infi_token *tk, char *input, tm_infi_token_type t) {
+int _skip(tm_parf_token *tk, char *input, tm_parf_token_type t) {
     int r = 0;
 
     while (tk->type == t) {
-        r = tm_infi_lexer(tk, input, tk->position + 1);
+        r = tm_parf_lexer(tk, input, tk->position + 1);
         if (r < 0)
             return r;
     }
@@ -119,7 +119,7 @@ int _skip(tm_infi_token *tk, char *input, tm_infi_token_type t) {
  * @param error error, if any
  * @return \p NULL if it was not able to read the string, a pointer to the string otherwise
  */
-char* _parse_string(tm_infi_token* tk, char* input, tm_infi_error* error) {
+char* _parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
     if (_eat(tk, input, TM_TK_QUOTE) != 0) {
         error->what = "expected quote at beginning of string";
         error->position = tk->position;
@@ -154,7 +154,7 @@ char* _parse_string(tm_infi_token* tk, char* input, tm_infi_error* error) {
             tmp = realloc(tmp, fac * mul * sizeof(char));
         }
 
-        tm_infi_lexer(tk, input, tk->position + 1);
+        tm_parf_lexer(tk, input, tk->position + 1);
     }
 
     _eat(tk, input, TM_TK_QUOTE);
@@ -171,15 +171,15 @@ char* _parse_string(tm_infi_token* tk, char* input, tm_infi_error* error) {
  * @param tk valid token
  * @param input input string
  * @param error error, if any
- * @return \p NULL if there was an error, the object (of type \p TM_INFI_STRING)  otherwise
+ * @return \p NULL if there was an error, the object (of type \p TM_parf_STRING)  otherwise
  */
-tm_infi_t* tm_infi_parse_string(tm_infi_token* tk, char* input, tm_infi_error* error) {
-    tm_infi_t* object = NULL;
+tm_parf_t* tm_parf_parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
+    tm_parf_t* object = NULL;
 
     char* tmp = _parse_string(tk, input, error);
 
     if (tmp != NULL) {
-        object = tm_infi_string_new(tmp);
+        object = tm_parf_string_new(tmp);
         free(tmp);
     }
 
@@ -200,9 +200,9 @@ tm_infi_t* tm_infi_parse_string(tm_infi_token* tk, char* input, tm_infi_error* e
  * @param tk valid token
  * @param input input string
  * @param error error, if any
- * @return \p NULL if there was an error, the object (of type \p TM_INFI_REAL or \p TM_INFI_INTEGER) otherwise
+ * @return \p NULL if there was an error, the object (of type \p TM_parf_REAL or \p TM_parf_INTEGER) otherwise
  */
-tm_infi_t* tm_infi_parse_number(tm_infi_token* tk, char* input, tm_infi_error* error) {
+tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* error) {
     char* beg = tk->value;
     int beg_pos = tk->position;
 
@@ -230,22 +230,22 @@ tm_infi_t* tm_infi_parse_number(tm_infi_token* tk, char* input, tm_infi_error* e
             _eat(tk, input, TM_TK_CHAR);
 
             if (tk->type == TM_TK_DASH || tk->type == TM_TK_PLUS)
-                tm_infi_lexer(tk, input, tk->position + 1);
+                tm_parf_lexer(tk, input, tk->position + 1);
 
             _skip(tk, input, TM_TK_DIGIT);
         }
     }
 
     char* end;
-    tm_infi_t* obj = NULL;
+    tm_parf_t* obj = NULL;
     if (dot_found || exp_found) { // then it is a real
-        obj = tm_infi_real_new(strtod(beg, &end));
+        obj = tm_parf_real_new(strtod(beg, &end));
     } else { // nope, it is an int
-        obj = tm_infi_integer_new((int) strtol(beg, &end, 10));
+        obj = tm_parf_integer_new((int) strtol(beg, &end, 10));
     }
 
     if ((int) (end-beg) != tk->position - beg_pos) {
-        tm_infi_delete(obj);
+        tm_parf_delete(obj);
         error->what = "error while parsing number";
         error->position = tk->position;
         return NULL;
@@ -265,9 +265,9 @@ tm_infi_t* tm_infi_parse_number(tm_infi_token* tk, char* input, tm_infi_error* e
  * @param tk valid token
  * @param input input string
  * @param error error, if any
- * @return \p NULL if there was an error, the object (of type \p TM_INFI_BOOLEAN)  otherwise
+ * @return \p NULL if there was an error, the object (of type \p TM_parf_BOOLEAN)  otherwise
  */
-tm_infi_t* tm_infi_parse_boolean(tm_infi_token* tk, char* input, tm_infi_error* error) {
+tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* error) {
     if (tk->type != TM_TK_CHAR) {
         error->what = "expected a character for boolean";
         error->position = tk->position;
@@ -275,14 +275,14 @@ tm_infi_t* tm_infi_parse_boolean(tm_infi_token* tk, char* input, tm_infi_error* 
     }
 
     char* expected;
-    tm_infi_t* object = NULL;
+    tm_parf_t* object = NULL;
 
     if (input[tk->position] == 't') { // true ?
         expected = "true";
-        object = tm_infi_boolean_new(1);
+        object = tm_parf_boolean_new(1);
     } else if (input[tk->position] == 'f') { // false ?
         expected = "false";
-        object = tm_infi_boolean_new(0);
+        object = tm_parf_boolean_new(0);
     } else {
         error->what = "expected a character for boolean";
         error->position = tk->position;
@@ -294,13 +294,13 @@ tm_infi_t* tm_infi_parse_boolean(tm_infi_token* tk, char* input, tm_infi_error* 
 
         while (expected[i] != '\0') {
             if (tk->type != TM_TK_CHAR || *(tk->value) != expected[i]) {
-                tm_infi_delete(object);
+                tm_parf_delete(object);
                 error->what = "unexpected token in boolean";
                 error->position = tk->position;
                 return NULL;
             }
 
-            tm_infi_lexer(tk, input, tk->position + 1);
+            tm_parf_lexer(tk, input, tk->position + 1);
             i++;
         }
     }
@@ -308,7 +308,7 @@ tm_infi_t* tm_infi_parse_boolean(tm_infi_token* tk, char* input, tm_infi_error* 
     return object;
 }
 
-tm_infi_t* tm_infi_parse_value(tm_infi_token* tk, char* input, tm_infi_error* error); // forward decl
+tm_parf_t* tm_parf_parse_value(tm_parf_token* tk, char* input, tm_parf_error* error); // forward decl
 
 /**
  * Parse a list
@@ -321,41 +321,41 @@ tm_infi_t* tm_infi_parse_value(tm_infi_token* tk, char* input, tm_infi_error* er
  * @param tk valid token
  * @param input input string
  * @param error error, if any
- * @return \p NULL if there was an error, the object (of type \p TM_INFI_LIST) otherwise
+ * @return \p NULL if there was an error, the object (of type \p TM_parf_LIST) otherwise
  */
-tm_infi_t* tm_infi_parse_list(tm_infi_token* tk, char* input, tm_infi_error* error) {
+tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* error) {
     if (_eat(tk, input, TM_TK_LBRACKET) != 0) {
         error->what = "expected left bracket to begin an array";
         error->position = tk->position;
         return NULL;
     }
 
-    tm_infi_t* object = tm_infi_list_new();
-    tm_infi_t* val;
+    tm_parf_t* object = tm_parf_list_new();
+    tm_parf_t* val;
     int first = 1;
 
     while (tk->type != TM_TK_RBRACKET && tk->type != TM_TK_EOS) {
         if (first) {
             first = 0;
         } else if (_eat(tk, input, TM_TK_COMMA) != 0) {
-            tm_infi_delete(object);
+            tm_parf_delete(object);
             error->what = "expected comma in array";
             error->position = tk->position;
-            tm_infi_delete(object);
+            tm_parf_delete(object);
             return NULL;
         }
 
         _skip(tk, input, TM_TK_WHITESPACE);
 
-        val = tm_infi_parse_value(tk, input, error);
+        val = tm_parf_parse_value(tk, input, error);
 
         if (val == NULL) {
             error->what = "was not able to create value for array";
             error->position = tk->position;
-            tm_infi_delete(object);
+            tm_parf_delete(object);
             return NULL;
         } else {
-            tm_infi_list_append(object, val);
+            tm_parf_list_append(object, val);
         }
 
         _skip(tk, input, TM_TK_WHITESPACE);
@@ -364,34 +364,47 @@ tm_infi_t* tm_infi_parse_list(tm_infi_token* tk, char* input, tm_infi_error* err
     if(_eat(tk, input, TM_TK_RBRACKET) != 0) {
         error->what = "expected right bracket to end array";
         error->position = tk->position;
-        tm_infi_delete(object);
+        tm_parf_delete(object);
         return NULL;
     }
 
     return object;
 }
 
-tm_infi_t *tm_infi_parse_value(tm_infi_token *tk, char *input, tm_infi_error *error) {
+/**
+ * Parse a value
+ * \code
+ * VALUE := INTEGER | FLOAT | BOOLEAN | STRING | LIST;
+ * \endcode
+ * @pre \code{.c}
+ * tk != NULL && input != NULL && error != NULL
+ * \endcode
+ * @param tk valid token
+ * @param input input string
+ * @param error error, if any
+ * @return \p NULL if there was an error, the object (of correct type) otherwise
+ */
+tm_parf_t *tm_parf_parse_value(tm_parf_token *tk, char *input, tm_parf_error *error) {
 
     _skip(tk, input, TM_TK_WHITESPACE);
 
-    tm_infi_t* object = NULL;
+    tm_parf_t* object = NULL;
 
     switch (tk->type) {
         case TM_TK_LBRACKET:
-            object = tm_infi_parse_list(tk, input, error);
+            object = tm_parf_parse_list(tk, input, error);
             break;
         case TM_TK_QUOTE:
-            object = tm_infi_parse_string(tk, input, error);
+            object = tm_parf_parse_string(tk, input, error);
             break;
         case TM_TK_DOT:
         case TM_TK_DASH:
         case TM_TK_PLUS:
         case TM_TK_DIGIT:
-            object = tm_infi_parse_number(tk, input, error);
+            object = tm_parf_parse_number(tk, input, error);
             break;
         case TM_TK_CHAR:
-            object = tm_infi_parse_boolean(tk, input, error);
+            object = tm_parf_parse_boolean(tk, input, error);
             break;
         default:
             error->what = "Unexpected token for value";

@@ -9,5 +9,5 @@ link_directories(${CHECK_LIBRARY_DIRS})
 set(CHECK_EXTRA_LIBS m subunit rt pthread)
 
 # add subdirectories
-add_subdirectory(tests_input_file)
-add_subdirectory(tests_input_file_parser)
+add_subdirectory(tests_param_file)
+add_subdirectory(tests_param_file_parser)
