@@ -13,7 +13,7 @@
 #define TM_INFI_CHECK_P(o,t) ((o) == NULL || (o)->val_type != (t))
 
 typedef enum tm_infi_type_ {
-    TM_T_ARRAY,
+    TM_T_LIST,
     TM_T_OBJECT,
     TM_T_STRING,
     TM_T_INTEGER,
@@ -62,14 +62,14 @@ int tm_infi_real_value(tm_infi_t* obj, double* val);
 // string
 tm_infi_t* tm_infi_string_new(char* val);
 int tm_infi_string_set(tm_infi_t* obj, char* val);
-int tm_infi_string_value(tm_infi_t* object, const char **val);
+int tm_infi_string_value(tm_infi_t* object, char **val);
 int tm_infi_string_length(tm_infi_t* object, unsigned int *s);
 
-// array
-tm_infi_t* tm_infi_array_new();
-int tm_infi_array_append(tm_infi_t* obj, tm_infi_t* val);
-int tm_infi_array_get(tm_infi_t* obj, int index, tm_infi_t** val);
-int tm_infi_array_length(tm_infi_t* obj, unsigned int* sz);
+// list
+tm_infi_t* tm_infi_list_new();
+int tm_infi_list_append(tm_infi_t* obj, tm_infi_t* val);
+int tm_infi_list_get(tm_infi_t* obj, int index, tm_infi_t** val);
+int tm_infi_list_length(tm_infi_t* obj, unsigned int* sz);
 
 // iterator
 typedef struct tm_infi_iterator_ {

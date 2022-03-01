@@ -48,7 +48,7 @@ int tm_infi_delete(tm_infi_t* obj) {
     if(TM_INFI_IS(obj, TM_T_STRING) && obj->val_str != NULL)
         free(obj->val_str);
 
-    if ((TM_INFI_IS(obj, TM_T_OBJECT) || TM_INFI_IS(obj, TM_T_ARRAY)) && obj->val_obj_or_list != NULL)
+    if ((TM_INFI_IS(obj, TM_T_OBJECT) || TM_INFI_IS(obj, TM_T_LIST)) && obj->val_obj_or_list != NULL)
         r = tm_infi_delete(obj->val_obj_or_list);
 
     if (r < 0)
@@ -374,7 +374,7 @@ int tm_infi_string_set(tm_infi_t* object, char* val) {
  * @post \p val contains the value
  * @return 0 if everything went well, something else otherwise
  */
-int tm_infi_string_value(tm_infi_t* object, const char **val) {
+int tm_infi_string_value(tm_infi_t* object, char **val) {
     if (TM_INFI_CHECK_P(object, TM_T_STRING))
         return -1;
 
@@ -402,14 +402,14 @@ int tm_infi_string_length(tm_infi_t *object, unsigned int *s) {
     return 0;
 }
 
-/* array */
+/* list */
 
 /**
- * Create an input file object of type \p TM_T_ARRAY
+ * Create an input file object of type \p TM_T_LIST
  * @return the initialized object, or \p NULL if malloc failed.
  */
-tm_infi_t* tm_infi_array_new() {
-    tm_infi_t* o = tm_infi_new(TM_T_ARRAY);
+tm_infi_t* tm_infi_list_new() {
+    tm_infi_t* o = tm_infi_new(TM_T_LIST);
     if(o != NULL)
         o->val_size = 0;
 
@@ -417,17 +417,17 @@ tm_infi_t* tm_infi_array_new() {
 }
 
 /**
- * Append an element at the end of the array
+ * Append an element at the end of the list
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_ARRAY)
+ * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_LIST)
  * \endcode
- * @param obj the array
+ * @param obj the list
  * @param val the value to add
- * @post \p val is added to the array
+ * @post \p val is added to the list
  * @return 0 if the element was added, something else otherwise
  */
-int tm_infi_array_append(tm_infi_t* obj, tm_infi_t* val) {
-    if (TM_INFI_CHECK_P(obj, TM_T_ARRAY))
+int tm_infi_list_append(tm_infi_t* obj, tm_infi_t* val) {
+    if (TM_INFI_CHECK_P(obj, TM_T_LIST))
         return -1;
 
     if(obj->val_obj_or_list == NULL) {
@@ -443,17 +443,17 @@ int tm_infi_array_append(tm_infi_t* obj, tm_infi_t* val) {
 }
 
 /**
- * Get the length of the array
+ * Get the length of the list
  * @pre \code{.c}
- * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_ARRAY)
+ * obj != NULL && TM_INFI_CHECK_P(obj, TM_T_LIST)
  * \endcode
  * @param obj the object
  * @param sz the size
- * @post \p sz is set to the size of the array
+ * @post \p sz is set to the size of the list
  * @return 0 if everything went well, something else otherwise
  */
-int tm_infi_array_length(tm_infi_t* obj, unsigned int* sz) {
-    if (TM_INFI_CHECK_P(obj, TM_T_ARRAY))
+int tm_infi_list_length(tm_infi_t* obj, unsigned int* sz) {
+    if (TM_INFI_CHECK_P(obj, TM_T_LIST))
         return -1;
 
     *sz = obj->val_size;
@@ -464,17 +464,17 @@ int tm_infi_array_length(tm_infi_t* obj, unsigned int* sz) {
  * Get element \p index. If \p index is negative, start from the last element.
  * @pre \code{.c}
  * obj != NULL
- * && TM_INFI_CHECK_P(obj, TM_T_ARRAY)
- * && (0 <= index < tm_infi_array_length(obj) || -tm_infi_array_length(obj) <= index < 0)
+ * && TM_INFI_CHECK_P(obj, TM_T_LIST)
+ * && (0 <= index < tm_infi_list_length(obj) || -tm_infi_list_length(obj) <= index < 0)
  * \endcode
- * @param obj the array object
+ * @param obj the list object
  * @param index the index
  * @param val the value
  * @post \p val point to the object at index \p index, if there is such index.
  * @return 0 if there is an object at the requested index, something else otherwise
  */
-int tm_infi_array_get(tm_infi_t* obj, int index, tm_infi_t** val) {
-    if (TM_INFI_CHECK_P(obj, TM_T_ARRAY))
+int tm_infi_list_get(tm_infi_t* obj, int index, tm_infi_t** val) {
+    if (TM_INFI_CHECK_P(obj, TM_T_LIST))
         return -1;
 
     if (index < 0)
@@ -499,12 +499,12 @@ int tm_infi_array_get(tm_infi_t* obj, int index, tm_infi_t** val) {
 /**
  * Create an iterator
  * @pre \code{.c}
- * TM_INFI_CHECK_P(obj, TM_T_ARRAY) || TM_INFI_CHECK_P(obj, TM_T_OBJECT)
+ * TM_INFI_CHECK_P(obj, TM_T_LIST) || TM_INFI_CHECK_P(obj, TM_T_OBJECT)
  * \endcode
  * @return the initialized object, or \p NULL if malloc failed
  */
 tm_infi_iterator* tm_infi_iterator_new(tm_infi_t* obj) {
-    if (!TM_INFI_CHECK_P(obj, TM_T_ARRAY) && !TM_INFI_CHECK_P(obj, TM_T_OBJECT))
+    if (!TM_INFI_CHECK_P(obj, TM_T_LIST) && !TM_INFI_CHECK_P(obj, TM_T_OBJECT))
         return NULL;
 
     tm_infi_iterator* it = malloc(sizeof(tm_infi_iterator));

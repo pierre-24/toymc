@@ -112,7 +112,7 @@ int _skip(tm_infi_token *tk, char *input, tm_infi_token_type t) {
 /**
  * Parse a string. Caller \b must free it.
  * @pre \code{.c}
- * tk != NULL && input != NULL
+ * tk != NULL && input != NULL && error != NULL
  * \endcode
  * @param tk valid token
  * @param input input string
@@ -171,7 +171,7 @@ char* _parse_string(tm_infi_token* tk, char* input, tm_infi_error* error) {
  * @param tk valid token
  * @param input input string
  * @param error error, if any
- * @return NULL if there was an error, the object otherwise
+ * @return NULL if there was an error, the object (of type \p TM_INFI_STRING)  otherwise
  */
 tm_infi_t* tm_infi_parse_string(tm_infi_token* tk, char* input, tm_infi_error* error) {
     tm_infi_t* object = NULL;
@@ -193,14 +193,14 @@ tm_infi_t* tm_infi_parse_string(tm_infi_token* tk, char* input, tm_infi_error* e
  * INT := (PLUS | DASH)? DIGIT*;
  * REAL := INT? DOT DIGIT DIGIT* (('E' | 'e') (PLUS | MINUS)? DIGIT DIGIT*)?;
  * \endcode
- * Actually, \p strtol and \p strtod are used to parse the number.
+ * In the end, \p strtol and \p strtod are used to parse the number.
  * @pre \code{.c}
- * tk != NULL && input != NULL
+ * tk != NULL && input != NULL && error != NULL
  * \endcode
  * @param tk valid token
  * @param input input string
  * @param error error, if any
- * @return NULL if there was an error, the object otherwise
+ * @return NULL if there was an error, the object (of type \p TM_INFI_REAL or \p TM_INFI_INTEGER) otherwise
  */
 tm_infi_t* tm_infi_parse_number(tm_infi_token* tk, char* input, tm_infi_error* error) {
     char* beg = tk->value;
@@ -253,4 +253,5 @@ tm_infi_t* tm_infi_parse_number(tm_infi_token* tk, char* input, tm_infi_error* e
 
     return obj;
 }
+
 

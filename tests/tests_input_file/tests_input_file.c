@@ -124,86 +124,86 @@ START_TEST(test_infi_string_set) {
 END_TEST
 
 
-/* arrays */
-tm_infi_t* obj_array;
+/* lists */
+tm_infi_t* obj_list;
 
-void setup_array() {
-    obj_array = tm_infi_array_new();
+void setup_list() {
+    obj_list = tm_infi_list_new();
 }
 
-void teardown_array() {
-    _OK(tm_infi_delete(obj_array));
+void teardown_list() {
+    _OK(tm_infi_delete(obj_list));
 }
 
-START_TEST(test_infi_array_append) {
+START_TEST(test_infi_list_append) {
     tm_infi_t* val = tm_infi_integer_new(INT_VALUE);
     tm_infi_t* val2 = tm_infi_integer_new(INT_VALUE);
 
     // first append
-    ck_assert_uint_eq(obj_array->val_size, 0);
-    _OK(tm_infi_array_append(obj_array, val));
-    ck_assert_uint_eq(obj_array->val_size, 1);
+    ck_assert_uint_eq(obj_list->val_size, 0);
+    _OK(tm_infi_list_append(obj_list, val));
+    ck_assert_uint_eq(obj_list->val_size, 1);
 
-    ck_assert_ptr_eq(obj_array->val_obj_or_list, val);
-    ck_assert_ptr_eq(obj_array->last, val);
+    ck_assert_ptr_eq(obj_list->val_obj_or_list, val);
+    ck_assert_ptr_eq(obj_list->last, val);
 
     // second append
-    _OK(tm_infi_array_append(obj_array, val2));
-    ck_assert_uint_eq(obj_array->val_size, 2);
+    _OK(tm_infi_list_append(obj_list, val2));
+    ck_assert_uint_eq(obj_list->val_size, 2);
 
-    ck_assert_ptr_eq(obj_array->val_obj_or_list, val);
-    ck_assert_ptr_eq(obj_array->val_obj_or_list->next, val2);
-    ck_assert_ptr_eq(obj_array->last, val2);
+    ck_assert_ptr_eq(obj_list->val_obj_or_list, val);
+    ck_assert_ptr_eq(obj_list->val_obj_or_list->next, val2);
+    ck_assert_ptr_eq(obj_list->last, val2);
 }
 END_TEST
 
-START_TEST(test_infi_array_get) {
+START_TEST(test_infi_list_get) {
     tm_infi_t* val = tm_infi_integer_new(INT_VALUE);
-    _OK(tm_infi_array_append(obj_array, val));
+    _OK(tm_infi_list_append(obj_list, val));
     tm_infi_t* val2 = tm_infi_integer_new(INT_VALUE);
-    _OK(tm_infi_array_append(obj_array, val2));
+    _OK(tm_infi_list_append(obj_list, val2));
     tm_infi_t* val3 = tm_infi_integer_new(INT_VALUE);
-    _OK(tm_infi_array_append(obj_array, val3));
+    _OK(tm_infi_list_append(obj_list, val3));
 
-    ck_assert_uint_eq(obj_array->val_size, 3);
+    ck_assert_uint_eq(obj_list->val_size, 3);
 
     // get first
     tm_infi_t* elm;
-    _OK(tm_infi_array_get(obj_array, 0, &elm));
+    _OK(tm_infi_list_get(obj_list, 0, &elm));
     ck_assert_ptr_eq(elm, val);
 
     // get second
-    _OK(tm_infi_array_get(obj_array, 1, &elm));
+    _OK(tm_infi_list_get(obj_list, 1, &elm));
     ck_assert_ptr_eq(elm, val2);
 
     // get last
-    _OK(tm_infi_array_get(obj_array, -1, &elm));
+    _OK(tm_infi_list_get(obj_list, -1, &elm));
     ck_assert_ptr_eq(elm, val3);
 
     // get one before last
-    _OK(tm_infi_array_get(obj_array, -2, &elm));
+    _OK(tm_infi_list_get(obj_list, -2, &elm));
     ck_assert_ptr_eq(elm, val2);
 
     // fail because too large
-    _NOK(tm_infi_array_get(obj_array, 5, &elm));
-    _NOK(tm_infi_array_get(obj_array, -5, &elm));
+    _NOK(tm_infi_list_get(obj_list, 5, &elm));
+    _NOK(tm_infi_list_get(obj_list, -5, &elm));
 }
 END_TEST
 
-START_TEST(test_infi_array_length) {
+START_TEST(test_infi_list_length) {
     unsigned int l = 0;
-    _OK(tm_infi_array_length(obj_array, &l));
+    _OK(tm_infi_list_length(obj_list, &l));
     ck_assert_uint_eq(l, 0);
 
     tm_infi_t* val = tm_infi_integer_new(INT_VALUE);
-    _OK(tm_infi_array_append(obj_array, val));
-    _OK(tm_infi_array_length(obj_array, &l));
+    _OK(tm_infi_list_append(obj_list, val));
+    _OK(tm_infi_list_length(obj_list, &l));
     ck_assert_uint_eq(l, 1);
 }
 END_TEST
 
 
-START_TEST(test_infi_array_iterate) {
+START_TEST(test_infi_list_iterate) {
 
     tm_infi_t* tab[] = {
             tm_infi_integer_new(INT_VALUE),
@@ -212,10 +212,10 @@ START_TEST(test_infi_array_iterate) {
     };
 
     for(int i=0; i < 3; i++)
-        _OK(tm_infi_array_append(obj_array, tab[i]));
+        _OK(tm_infi_list_append(obj_list, tab[i]));
 
     tm_infi_t* obj;
-    tm_infi_iterator * it = tm_infi_iterator_new(obj_array);
+    tm_infi_iterator * it = tm_infi_iterator_new(obj_list);
     int i = 0;
 
     while(tm_infi_iterator_has_next(it)) {
@@ -378,15 +378,15 @@ void add_test_cases(Suite* s) {
 
     suite_add_tcase(s, tc_string);
 
-    // arrays
-    TCase* tc_array = tcase_create("arrays");
-    tcase_add_checked_fixture(tc_array, setup_array, teardown_array);
-    tcase_add_test(tc_array, test_infi_array_append);
-    tcase_add_test(tc_array, test_infi_array_get);
-    tcase_add_test(tc_array, test_infi_array_length);
-    tcase_add_test(tc_array, test_infi_array_iterate);
+    // lists
+    TCase* tc_list = tcase_create("lists");
+    tcase_add_checked_fixture(tc_list, setup_list, teardown_list);
+    tcase_add_test(tc_list, test_infi_list_append);
+    tcase_add_test(tc_list, test_infi_list_get);
+    tcase_add_test(tc_list, test_infi_list_length);
+    tcase_add_test(tc_list, test_infi_list_iterate);
 
-    suite_add_tcase(s, tc_array);
+    suite_add_tcase(s, tc_list);
 
     // objects
     TCase* tc_object = tcase_create("objects");
