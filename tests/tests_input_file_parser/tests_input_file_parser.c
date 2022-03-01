@@ -9,6 +9,7 @@ int tm_infi_lexer(tm_infi_token *tk, char *input, int position);
 tm_infi_t* tm_infi_parse_string(tm_infi_token* tk, char* input, tm_infi_error* error);
 tm_infi_t* tm_infi_parse_number(tm_infi_token* tk, char* input, tm_infi_error* error);
 tm_infi_t* tm_infi_parse_boolean(tm_infi_token* tk, char* input, tm_infi_error* error);
+tm_infi_t* tm_infi_parse_list(tm_infi_token* tk, char* input, tm_infi_error* error);
 
 tm_infi_t *parse_string(tm_infi_token *t, char *input) {
     tm_infi_error e;
@@ -26,6 +27,12 @@ tm_infi_t *parse_boolean(tm_infi_token *t, char *input) {
     tm_infi_error e;
     _OK(tm_infi_lexer(t, input, 0));
     return tm_infi_parse_boolean(t, input, &e);
+}
+
+tm_infi_t *parse_list(tm_infi_token *t, char *input) {
+    tm_infi_error e;
+    _OK(tm_infi_lexer(t, input, 0));
+    return tm_infi_parse_list(t, input, &e);
 }
 
 START_TEST(test_lexer) {
@@ -81,7 +88,6 @@ START_TEST(test_parser_number) {
     char tmp[100];
     int val_int = 42, val_int_found;
     double val_real = 3.1415, val_real_found;
-    char* val_wrong;
 
     tm_infi_token t;
 
@@ -170,6 +176,50 @@ START_TEST(test_parser_boolean) {
 }
 END_TEST
 
+START_TEST(test_parser_list) {
+    char tmp[100];
+    int value[] = {
+            3, 42, -6
+    };
+    tm_infi_token t;
+
+    sprintf(tmp, "[%d, %d, %d]", value[0], value[1], value[2]);
+
+    tm_infi_t* obj_list = parse_list(&t, tmp);
+    tm_infi_t* obj;
+    ck_assert_int_eq(t.type, TM_TK_EOS);
+
+    tm_infi_iterator * it = tm_infi_iterator_new(obj_list);
+    int i = 0, val;
+
+    while(tm_infi_iterator_has_next(it)) {
+        _OK(tm_infi_iterator_next(it, &obj));
+        _OK(tm_infi_integer_value(obj, &val));
+        ck_assert_int_eq(val, value[i]);
+        i++;
+    }
+
+    ck_assert_int_eq(i, 3);
+
+    tm_infi_delete(obj_list);
+    tm_infi_iterator_delete(it);
+
+    // non-working stuffs
+    char* wrong_examples[] = {
+            "[",
+            "[2",
+            "[2,",
+            "[2,x",
+            "[2,3"
+    };
+
+    int sz = sizeof(wrong_examples) / sizeof(*wrong_examples);
+    for(i=0; i < sz; i++) {
+        ck_assert_ptr_null(parse_list(&t, wrong_examples[i]));
+    }
+}
+END_TEST
+
 void add_tests_input_file_parser_cases(Suite* s) {
     // lexer
     TCase* tc_lexer = tcase_create("lexer");
@@ -182,6 +232,7 @@ void add_tests_input_file_parser_cases(Suite* s) {
     tcase_add_test(tc_parser, test_parser_string);
     tcase_add_test(tc_parser, test_parser_number);
     tcase_add_test(tc_parser, test_parser_boolean);
+    tcase_add_test(tc_parser, test_parser_list);
 
     suite_add_tcase(s, tc_parser);
 }

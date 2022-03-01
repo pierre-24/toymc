@@ -171,7 +171,7 @@ char* _parse_string(tm_infi_token* tk, char* input, tm_infi_error* error) {
  * @param tk valid token
  * @param input input string
  * @param error error, if any
- * @return NULL if there was an error, the object (of type \p TM_INFI_STRING)  otherwise
+ * @return \p NULL if there was an error, the object (of type \p TM_INFI_STRING)  otherwise
  */
 tm_infi_t* tm_infi_parse_string(tm_infi_token* tk, char* input, tm_infi_error* error) {
     tm_infi_t* object = NULL;
@@ -200,7 +200,7 @@ tm_infi_t* tm_infi_parse_string(tm_infi_token* tk, char* input, tm_infi_error* e
  * @param tk valid token
  * @param input input string
  * @param error error, if any
- * @return NULL if there was an error, the object (of type \p TM_INFI_REAL or \p TM_INFI_INTEGER) otherwise
+ * @return \p NULL if there was an error, the object (of type \p TM_INFI_REAL or \p TM_INFI_INTEGER) otherwise
  */
 tm_infi_t* tm_infi_parse_number(tm_infi_token* tk, char* input, tm_infi_error* error) {
     char* beg = tk->value;
@@ -265,7 +265,7 @@ tm_infi_t* tm_infi_parse_number(tm_infi_token* tk, char* input, tm_infi_error* e
  * @param tk valid token
  * @param input input string
  * @param error error, if any
- * @return NULL if there was an error, the object (of type \p TM_INFI_BOOLEAN)  otherwise
+ * @return \p NULL if there was an error, the object (of type \p TM_INFI_BOOLEAN)  otherwise
  */
 tm_infi_t* tm_infi_parse_boolean(tm_infi_token* tk, char* input, tm_infi_error* error) {
     if (tk->type != TM_TK_CHAR) {
@@ -303,6 +303,100 @@ tm_infi_t* tm_infi_parse_boolean(tm_infi_token* tk, char* input, tm_infi_error* 
             tm_infi_lexer(tk, input, tk->position + 1);
             i++;
         }
+    }
+
+    return object;
+}
+
+tm_infi_t* tm_infi_parse_value(tm_infi_token* tk, char* input, tm_infi_error* error); // forward decl
+
+/**
+ * Parse a list
+ * \code
+ * LIST := LBRACKET (VALUE (COMMA VALUE)*)? RBRACKET;
+ * \endcode
+ * @pre \code{.c}
+ * tk != NULL && input != NULL && error != NULL
+ * \endcode
+ * @param tk valid token
+ * @param input input string
+ * @param error error, if any
+ * @return \p NULL if there was an error, the object (of type \p TM_INFI_LIST) otherwise
+ */
+tm_infi_t* tm_infi_parse_list(tm_infi_token* tk, char* input, tm_infi_error* error) {
+    if (_eat(tk, input, TM_TK_LBRACKET) != 0) {
+        error->what = "expected left bracket to begin an array";
+        error->position = tk->position;
+        return NULL;
+    }
+
+    tm_infi_t* object = tm_infi_list_new();
+    tm_infi_t* val;
+    int first = 1;
+
+    while (tk->type != TM_TK_RBRACKET && tk->type != TM_TK_EOS) {
+        if (first) {
+            first = 0;
+        } else if (_eat(tk, input, TM_TK_COMMA) != 0) {
+            tm_infi_delete(object);
+            error->what = "expected comma in array";
+            error->position = tk->position;
+            tm_infi_delete(object);
+            return NULL;
+        }
+
+        _skip(tk, input, TM_TK_WHITESPACE);
+
+        val = tm_infi_parse_value(tk, input, error);
+
+        if (val == NULL) {
+            error->what = "was not able to create value for array";
+            error->position = tk->position;
+            tm_infi_delete(object);
+            return NULL;
+        } else {
+            tm_infi_list_append(object, val);
+        }
+
+        _skip(tk, input, TM_TK_WHITESPACE);
+    }
+
+    if(_eat(tk, input, TM_TK_RBRACKET) != 0) {
+        error->what = "expected right bracket to end array";
+        error->position = tk->position;
+        tm_infi_delete(object);
+        return NULL;
+    }
+
+    return object;
+}
+
+tm_infi_t *tm_infi_parse_value(tm_infi_token *tk, char *input, tm_infi_error *error) {
+
+    _skip(tk, input, TM_TK_WHITESPACE);
+
+    tm_infi_t* object = NULL;
+
+    switch (tk->type) {
+        case TM_TK_LBRACKET:
+            object = tm_infi_parse_list(tk, input, error);
+            break;
+        case TM_TK_QUOTE:
+            object = tm_infi_parse_string(tk, input, error);
+            break;
+        case TM_TK_DOT:
+        case TM_TK_DASH:
+        case TM_TK_PLUS:
+        case TM_TK_DIGIT:
+            object = tm_infi_parse_number(tk, input, error);
+            break;
+        case TM_TK_CHAR:
+            object = tm_infi_parse_boolean(tk, input, error);
+            break;
+        default:
+            error->what = "Unexpected token for value";
+            error->position = tk->position;
+            break;
     }
 
     return object;
