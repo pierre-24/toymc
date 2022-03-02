@@ -27,13 +27,34 @@ typedef enum tm_parf_token_type_ {
     TM_TK_LAST
 } tm_parf_token_type;
 
+/**
+ * @brief Token used by the Lexer. Serve as placeholder of the position.
+ * Fields are \code{.c}
+ * char* value; // pointer to the char in the string (aka &input[position])
+ * tm_parf_token_type type; // type of the token
+ * int position; // position in the string
+ * int line; // the line (one-based)
+ * int pos_in_line; // the position in line (one-based)
+ * \endcode
+ */
 typedef struct tm_parf_token_ {
     char* value;
     tm_parf_token_type type;
     int position;
-    int size;
+    int line;
+    int pos_in_line;
 } tm_parf_token;
 
+int tm_parf_token_init(tm_parf_token* tk, char* input);
+
+/**
+ * Error raised by the parser.
+ *
+ * Fields are \code{.c}
+ * char* what; // contains the error message
+ * int position; // contains the position to character that raised the error
+ * \endcode
+ */
 typedef struct tm_parf_error_ {
     char* what;
     int position;

@@ -5,33 +5,31 @@
 #define _OK(v) ck_assert_int_eq(v, 0)
 #define _NOK(v) ck_assert_int_ne(v, 0)
 
-int tm_parf_lexer(tm_parf_token *tk, char *input, int position);
+int tm_parf_lexer(tm_parf_token *tk, char *input, int shift);
 tm_parf_t* tm_parf_parse_string(tm_parf_token* tk, char* input, tm_parf_error* error);
 tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* error);
 tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* error);
 tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* error);
 
+tm_parf_error e;
+
 tm_parf_t *parse_string(tm_parf_token *t, char *input) {
-    tm_parf_error e;
-    _OK(tm_parf_lexer(t, input, 0));
+    _OK(tm_parf_token_init(t, input));
     return tm_parf_parse_string(t, input, &e);
 }
 
 tm_parf_t *parse_number(tm_parf_token *t, char *input) {
-    tm_parf_error e;
-    _OK(tm_parf_lexer(t, input, 0));
+    _OK(tm_parf_token_init(t, input));
     return tm_parf_parse_number(t, input, &e);
 }
 
 tm_parf_t *parse_boolean(tm_parf_token *t, char *input) {
-    tm_parf_error e;
-    _OK(tm_parf_lexer(t, input, 0));
+    _OK(tm_parf_token_init(t, input));
     return tm_parf_parse_boolean(t, input, &e);
 }
 
 tm_parf_t *parse_list(tm_parf_token *t, char *input) {
-    tm_parf_error e;
-    _OK(tm_parf_lexer(t, input, 0));
+    _OK(tm_parf_token_init(t, input));
     return tm_parf_parse_list(t, input, &e);
 }
 
@@ -39,13 +37,36 @@ START_TEST(test_lexer) {
     char* str = "ab[-9]";
     int l = strlen(str);
     tm_parf_token t;
+    _OK(tm_parf_token_init(&t, str));
 
     tm_parf_token_type tab[] = {
             TM_TK_CHAR, TM_TK_CHAR, TM_TK_LBRACKET, TM_TK_DASH, TM_TK_DIGIT, TM_TK_RBRACKET, TM_TK_EOS};
 
     for(int i=0; i <= l; i++) {
-        tm_parf_lexer(&t, str, i);
         ck_assert_int_eq(t.type, tab[i]);
+        tm_parf_lexer(&t, str, 1);
+    }
+}
+END_TEST
+
+START_TEST(test_lexer_line) {
+    char* str = "a\nb1\ncde\nf2";
+    int l = strlen(str);
+    tm_parf_token t;
+    _OK(tm_parf_token_init(&t, str));
+    int line = 1, pos_in_line = 0;
+
+    for(int i=0; i < l; i++) {
+        ck_assert_int_eq(t.line, line);
+        ck_assert_int_eq(t.pos_in_line, pos_in_line);
+
+        tm_parf_lexer(&t, str, 1);
+        if(*(t.value) == '\n') {
+            line += 1;
+            pos_in_line = 0;
+        } else {
+            pos_in_line += 1;
+        }
     }
 }
 END_TEST
@@ -245,7 +266,6 @@ START_TEST(test_parser_object) {
     int value[] = {
             3, 42, -6
     };
-    tm_parf_error e;
 
     sprintf(tmp, "%s %d %s %d # comment\n%s %d", key[0], value[0], key[1], value[1], key[2], value[2]);
 
@@ -289,6 +309,7 @@ void add_tests_param_file_parser_cases(Suite* s) {
     // lexer
     TCase* tc_lexer = tcase_create("lexer");
     tcase_add_test(tc_lexer, test_lexer);
+    tcase_add_test(tc_lexer, test_lexer_line);
 
     suite_add_tcase(s, tc_lexer);
 

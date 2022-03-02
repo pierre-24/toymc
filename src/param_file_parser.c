@@ -34,21 +34,24 @@ int lexer_translator[] = {
  * Set the token according to the character at \p position
  * @pre \code{.c}
  * tk != NULL && input != NULL
- * && 0 <= position < strlen(input)
+ * && 0 <= tk->position + shift < strlen(input)
  * \endcode
  * @param tk token object
  * @param input input string
- * @param position position
+ * @param shift shift with respect to the current position (should be 0 or 1)
  * @return 0 if everything went well, something else otherwise
  */
-int tm_parf_lexer(tm_parf_token *tk, char *input, int position) {
+int tm_parf_lexer(tm_parf_token *tk, char *input, int shift) {
     if (tk == NULL || input == NULL)
         return -1;
 
-    if (position < 0)
-        return -1;
+    if (shift > 1 || shift < 0)
+        return -2;
 
-    char c = input[position];
+    if (tk->position + shift < 0)
+        return -3;
+
+    char c = input[tk->position + shift];
     tm_parf_token_type t = TM_TK_CHAR;
 
     int* tr = lexer_translator;
@@ -61,12 +64,39 @@ int tm_parf_lexer(tm_parf_token *tk, char *input, int position) {
         tr += 2;
     }
 
-    tk->position = position;
+    tk->position += shift;
     tk->type = t;
-    tk->value = input+position;
-    tk->size = 1;
+    tk->value = input + tk->position;
+
+    if(*(tk->value) == '\n') {
+        tk->line += 1;
+        tk->pos_in_line = 0;
+    } else {
+        tk->pos_in_line += shift;
+    }
 
     return 0;
+}
+
+/**
+ * Initialize the token \p tk with the first character of \p input.
+ * @pre \code{.c}
+ * tk != NULL && input != NULL
+ * && strlen(input) >= 1
+ * \endcode
+ * @param tk the token
+ * @post \p tk is initialized.
+ * @return 0 if everything went well, something else otherwise
+ */
+int tm_parf_token_init(tm_parf_token* tk, char* input) {
+    if(tk == NULL)
+        return -1;
+
+    tk->position = 0;
+    tk->line = 1;
+    tk->pos_in_line = 0;
+
+    return tm_parf_lexer(tk, input, 0);
 }
 
 /**
@@ -85,7 +115,7 @@ int _eat(tm_parf_token *tk, char *input, tm_parf_token_type t) {
     if (tk->type != t)
         return -1;
 
-    return tm_parf_lexer(tk, input, tk->position + 1);
+    return tm_parf_lexer(tk, input, 1);
 }
 
 /**
@@ -104,7 +134,7 @@ int _skip(tm_parf_token *tk, char *input, tm_parf_token_type t) {
     int r;
 
     while (tk->type == t) {
-        r = tm_parf_lexer(tk, input, tk->position + 1);
+        r = tm_parf_lexer(tk, input, 1);
         if (r < 0)
             return r;
     }
@@ -158,7 +188,7 @@ char* _parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
             tmp = realloc(tmp, fac * mul * sizeof(char));
         }
 
-        tm_parf_lexer(tk, input, tk->position + 1);
+        tm_parf_lexer(tk, input, 1);
     }
 
     _eat(tk, input, TM_TK_QUOTE);
@@ -236,7 +266,7 @@ tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* e
             _eat(tk, input, TM_TK_CHAR);
 
             if (tk->type == TM_TK_DASH || tk->type == TM_TK_PLUS)
-                tm_parf_lexer(tk, input, tk->position + 1);
+                tm_parf_lexer(tk, input, 1);
 
             _skip(tk, input, TM_TK_DIGIT);
         }
@@ -313,7 +343,7 @@ tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* 
                 return NULL;
             }
 
-            tm_parf_lexer(tk, input, tk->position + 1);
+            tm_parf_lexer(tk, input, 1);
             i++;
         }
     }
@@ -456,7 +486,7 @@ char* _parse_name_lit(tm_parf_token* tk, char* input, tm_parf_error* error) {
             tmp = realloc(tmp, fac * mul * sizeof(char));
         }
 
-        tm_parf_lexer(tk, input, tk->position + 1);
+        tm_parf_lexer(tk, input, 1);
     }
 
     tmp[sz] = '\0';
@@ -484,7 +514,7 @@ int _skip_comment(tm_parf_token *tk, char *input) {
 
     int r = 0;
     while (tk->type != TM_TK_EOS && *(tk->value) != '\n') {
-        r = tm_parf_lexer(tk, input, tk->position + 1);
+        r = tm_parf_lexer(tk, input, 1);
         if (r < 0)
             return r;
     }
@@ -515,7 +545,7 @@ tm_parf_t* tm_parf_loads(char* input, tm_parf_error* error) {
     tm_parf_t* obj = tm_parf_object_new();
 
     // bootstrap
-    tm_parf_lexer(&tk, input, 0);
+    tm_parf_token_init(&tk, input);
     _skip(&tk, input, TM_TK_WHITESPACE);
 
     // read the stuff
