@@ -165,38 +165,24 @@ END_TEST
 START_TEST(test_parser_boolean) {
     tm_parf_token t;
     int found;
+    tm_parf_t* obj;
 
-    // true
-    tm_parf_t* obj = parse_boolean(&t, "true");
-    _OK(tm_parf_boolean_value(obj, &found));
-    ck_assert_int_eq(found, 1);
-    ck_assert_int_eq(t.type, TM_TK_EOS);
+    char* true[] = {"true", "yes", "on"};
+    char* false[] = {"false", "no", "off"};
 
-    tm_parf_delete(obj);
+    for(int i=0; i < 3; i++) {
+        obj = parse_boolean(&t, true[i]);
+        _OK(tm_parf_boolean_value(obj, &found));
+        ck_assert_int_eq(found, 1);
+        ck_assert_int_eq(t.type, TM_TK_EOS);
+        tm_parf_delete(obj);
 
-    // false
-    obj = parse_boolean(&t, "false");
-    _OK(tm_parf_boolean_value(obj, &found));
-    ck_assert_int_eq(found, 0);
-    ck_assert_int_eq(t.type, TM_TK_EOS);
-
-    tm_parf_delete(obj);
-
-    // yes
-    obj = parse_boolean(&t, "yes");
-    _OK(tm_parf_boolean_value(obj, &found));
-    ck_assert_int_eq(found, 1);
-    ck_assert_int_eq(t.type, TM_TK_EOS);
-
-    tm_parf_delete(obj);
-
-    // no
-    obj = parse_boolean(&t, "no");
-    _OK(tm_parf_boolean_value(obj, &found));
-    ck_assert_int_eq(found, 0);
-    ck_assert_int_eq(t.type, TM_TK_EOS);
-
-    tm_parf_delete(obj);
+        tm_parf_t* obj = parse_boolean(&t, false[i]);
+        _OK(tm_parf_boolean_value(obj, &found));
+        ck_assert_int_eq(found, 0);
+        ck_assert_int_eq(t.type, TM_TK_EOS);
+        tm_parf_delete(obj);
+    }
 
     // non-working stuffs
     char* wrong_examples[] = {

@@ -311,44 +311,24 @@ tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* 
         return NULL;
     }
 
-    char* expected;
-    tm_parf_t* object = NULL;
+    char buff[8];
+    int i = 0;
+    tm_parf_t* obj = NULL;
 
-    if (input[tk->position] == 't') { // true ?
-        expected = "true";
-        object = tm_parf_boolean_new(1);
-    } else if (input[tk->position] == 'f') { // false ?
-        expected = "false";
-        object = tm_parf_boolean_new(0);
-    } else if (input[tk->position] == 'y') { // yes ?
-        expected = "yes";
-        object = tm_parf_boolean_new(1);
-    } else if (input[tk->position] == 'n') { // no ?
-        expected = "no";
-        object = tm_parf_boolean_new(0);
-    } else {
-        error->what = "expected t, f, y or n for boolean";
-        error->position = tk->position;
-        return NULL;
+    while (tk->type == TM_TK_CHAR && i < 7) {
+        buff[i] = *(tk->value);
+        tm_parf_lexer(tk, input, 1);
+        i++;
     }
 
-    if(object != NULL) {
-        int i = 0;
+    buff[i] = '\0';
 
-        while (expected[i] != '\0') {
-            if (tk->type != TM_TK_CHAR || *(tk->value) != expected[i]) {
-                tm_parf_delete(object);
-                error->what = "unexpected token in boolean";
-                error->position = tk->position;
-                return NULL;
-            }
+    if((i == 2 && strcmp(buff, "on") == 0) || (i == 3 && strcmp(buff, "yes") == 0) || (i == 4 && strcmp(buff, "true") == 0))
+        obj = tm_parf_boolean_new(1);
+    else if((i == 2 && strcmp(buff, "no") == 0) || (i == 3 && strcmp(buff, "off") == 0) || (i == 5 && strcmp(buff, "false") == 0))
+        obj = tm_parf_boolean_new(0);
 
-            tm_parf_lexer(tk, input, 1);
-            i++;
-        }
-    }
-
-    return object;
+    return obj;
 }
 
 tm_parf_t* tm_parf_parse_value(tm_parf_token* tk, char* input, tm_parf_error* error); // forward decl
