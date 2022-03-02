@@ -107,7 +107,8 @@ END_TEST
 
 START_TEST(test_parser_number) {
     char tmp[100];
-    int val_int = 42, val_int_found;
+    int val_int = 42;
+    long val_int_found;
     double val_real = 3.1415, val_real_found;
 
     tm_parf_token t;
@@ -177,7 +178,7 @@ START_TEST(test_parser_boolean) {
         ck_assert_int_eq(t.type, TM_TK_EOS);
         tm_parf_delete(obj);
 
-        tm_parf_t* obj = parse_boolean(&t, false[i]);
+        obj = parse_boolean(&t, false[i]);
         _OK(tm_parf_boolean_value(obj, &found));
         ck_assert_int_eq(found, 0);
         ck_assert_int_eq(t.type, TM_TK_EOS);
@@ -213,7 +214,8 @@ START_TEST(test_parser_list) {
     ck_assert_int_eq(t.type, TM_TK_EOS);
 
     tm_parf_iterator * it = tm_parf_iterator_new(obj_list);
-    int i = 0, val;
+    int i = 0;
+    long val;
 
     while(tm_parf_iterator_has_next(it)) {
         _OK(tm_parf_iterator_next(it, &obj));
@@ -259,7 +261,8 @@ START_TEST(test_parser_object) {
     tm_parf_t* elmt;
 
     tm_parf_iterator * it = tm_parf_iterator_new(obj_object);
-    int i = 0, val;
+    int i = 0;
+    long val;
 
     while(tm_parf_iterator_has_next(it)) {
         _OK(tm_parf_iterator_next(it, &elmt));

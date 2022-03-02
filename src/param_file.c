@@ -221,7 +221,7 @@ int tm_parf_boolean_value(tm_parf_t* object, int* value) {
  * Create an input file object of type \p TM_T_INTEGER
  * @return the initialized object, or \p NULL if malloc failed
  */
-tm_parf_t* tm_parf_integer_new(int val) {
+tm_parf_t* tm_parf_integer_new(long val) {
     tm_parf_t* o = tm_parf_new(TM_T_INTEGER);
     if(o != NULL)
         tm_parf_integer_set(o, val);
@@ -233,16 +233,16 @@ tm_parf_t* tm_parf_integer_new(int val) {
  * @pre \code{.c}
  * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_INTEGER)
  * \endcode
- * @param object the integer object
+ * @param obj the integer object
  * @param val new value
  * @post object is set to \p val
  * @return 0 if the value is set, something else otherwise
  */
-int tm_parf_integer_set(tm_parf_t* object, int val) {
-    if (TM_PARF_CHECK_P(object, TM_T_INTEGER))
+int tm_parf_integer_set(tm_parf_t* obj, long val) {
+    if (TM_PARF_CHECK_P(obj, TM_T_INTEGER))
         return -1;
 
-    object->val_int = val;
+    obj->val_int = val;
     return 0;
 }
 
@@ -251,16 +251,16 @@ int tm_parf_integer_set(tm_parf_t* object, int val) {
  * @pre \code{.c}
  * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_INTEGER)
  * \endcode
- * @param object the integer object
- * @param value the value
+ * @param obj the integer object
+ * @param val the value
  * @post \p value contains the value
  * @return 0 if everything went well, something else otherwise
  */
-int tm_parf_integer_value(tm_parf_t* object, int* value) {
-    if (TM_PARF_CHECK_P(object, TM_T_INTEGER))
+int tm_parf_integer_value(tm_parf_t* obj, long *val) {
+    if (TM_PARF_CHECK_P(obj, TM_T_INTEGER))
         return -1;
 
-    *value = object->val_int;
+    *val = obj->val_int;
     return 0;
 }
 

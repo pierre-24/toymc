@@ -21,3 +21,4 @@ enable_testing()
 # add test
 add_test(NAME tests_param_file COMMAND tests_param_file)
 add_test(NAME tests_param_file_parser COMMAND tests_param_file_parser)
+add_test(NAME tests_simulation_parameters COMMAND tests_simulation_parameters)

@@ -1,6 +1,8 @@
 set(LIB_SOURCES
         param_file.c
-        param_file_parser.c)
+        param_file_parser.c
+        simulation_parameters.c
+        pcg32.c)
 
 set(PROG_SOURCES
         main.c)

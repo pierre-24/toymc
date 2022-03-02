@@ -143,6 +143,23 @@ int _skip(tm_parf_token *tk, char *input, tm_parf_token_type t) {
 }
 
 /**
+ * Fill the error
+ * @pre \code{.c}
+ * e != NULL && tk != NULL && what != NULL
+ * \endcode
+ * @param e error
+ * @param tk token
+ * @param what error description
+ * @post \p e is filled with the correct information
+ */
+void make_error(tm_parf_error* e, tm_parf_token* tk, char* what) {
+    e->what = "expected quote at beginning of string";
+    e->position = tk->position;
+    e->line = tk->line;
+    e->pos_in_line = tk->pos_in_line;
+}
+
+/**
  * Parse a string. Caller \b must free it.
  * @pre \code{.c}
  * tk != NULL && input != NULL && error != NULL
@@ -155,8 +172,7 @@ int _skip(tm_parf_token *tk, char *input, tm_parf_token_type t) {
  */
 char* _parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
     if (_eat(tk, input, TM_TK_QUOTE) != 0) {
-        error->what = "expected quote at beginning of string";
-        error->position = tk->position;
+        make_error(error, tk, "expected quote at beginning of string");
         return NULL;
     }
 
@@ -169,8 +185,7 @@ char* _parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
     while (tk->type != TM_TK_QUOTE || (escape && tk->type == TM_TK_QUOTE)) {
         if (tk->type == TM_TK_EOS) {
             free(tmp);
-            error->what = "got EOS while getting string";
-            error->position = tk->position;
+            make_error(error, tk, "got EOS while getting string");
             return NULL;
         }
 
@@ -246,8 +261,7 @@ tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* e
     int exp_found = 0;
 
     if (_eat(tk, input, TM_TK_DIGIT) != 0 && _eat(tk, input, TM_TK_DASH) && _eat(tk, input, TM_TK_PLUS) && _eat(tk, input, TM_TK_DOT)) {
-        error->what = "expected digit/dash/plus/dot to begin a number";
-        error->position = tk->position;
+        make_error(error, tk, "expected digit/dash/plus/dot to begin a number");
         return NULL;
     }
 
@@ -277,13 +291,12 @@ tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* e
     if (dot_found || exp_found) { // then it is a real
         obj = tm_parf_real_new(strtod(beg, &end));
     } else { // nope, it is an int
-        obj = tm_parf_integer_new((int) strtol(beg, &end, 10));
+        obj = tm_parf_integer_new(strtol(beg, &end, 10));
     }
 
     if ((int) (end-beg) != tk->position - beg_pos) {
         tm_parf_delete(obj);
-        error->what = "error while parsing number";
-        error->position = tk->position;
+        make_error(error, tk, "error while parsing number");
         return NULL;
     }
 
@@ -306,8 +319,7 @@ tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* e
  */
 tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* error) {
     if (tk->type != TM_TK_CHAR) {
-        error->what = "expected a character for boolean";
-        error->position = tk->position;
+        make_error(error, tk, "expected a character for boolean");
         return NULL;
     }
 
@@ -349,14 +361,12 @@ tm_parf_t* tm_parf_parse_value(tm_parf_token* tk, char* input, tm_parf_error* er
  */
 tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* error) {
     if (_eat(tk, input, TM_TK_LBRACKET) != 0) {
-        error->what = "expected left bracket to begin list";
-        error->position = tk->position;
+        make_error(error, tk, "expected left bracket to begin list");
         return NULL;
     }
 
     tm_parf_t* object = tm_parf_list_new();
     tm_parf_t* val;
-    int first = 1;
 
     _skip(tk, input, TM_TK_WHITESPACE);
 
@@ -364,8 +374,6 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
         val = tm_parf_parse_value(tk, input, error);
 
         if (val == NULL) {
-            error->what = "was not able to get value in list";
-            error->position = tk->position;
             tm_parf_delete(object);
             return NULL;
         } else {
@@ -376,8 +384,7 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
     }
 
     if(_eat(tk, input, TM_TK_RBRACKET) != 0) {
-        error->what = "expected right bracket to end list";
-        error->position = tk->position;
+        make_error(error, tk, "expected right bracket to end list");
         tm_parf_delete(object);
         return NULL;
     }
@@ -422,8 +429,7 @@ tm_parf_t *tm_parf_parse_value(tm_parf_token *tk, char *input, tm_parf_error *er
             object = tm_parf_parse_boolean(tk, input, error);
             break;
         default:
-            error->what = "Unexpected token for value";
-            error->position = tk->position;
+            make_error(error, tk, "Unexpected token for value");
             break;
     }
 
@@ -447,8 +453,7 @@ tm_parf_t *tm_parf_parse_value(tm_parf_token *tk, char *input, tm_parf_error *er
  */
 char* _parse_name_lit(tm_parf_token* tk, char* input, tm_parf_error* error) {
     if (!isalnum(input[tk->position]) && input[tk->position] != '_' && input[tk->position] != '-') {
-        error->what = "expected alpha or underscore to start the name literal";
-        error->position = tk->position;
+        make_error(error, tk, "expected alpha or underscore to start the name literal");
         return NULL;
     }
 
@@ -516,8 +521,6 @@ int _skip_comment(tm_parf_token *tk, char *input) {
  */
 tm_parf_t* tm_parf_loads(char* input, tm_parf_error* error) {
     if(input == NULL || error == NULL) {
-        error->what = "input or error is NULL";
-        error->position = 0;
         return NULL;
     }
 

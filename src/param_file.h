@@ -1,7 +1,3 @@
-//
-// Created by pierre on 26/02/2022.
-//
-
 #ifndef TOYMC_PARAM_FILE_H
 #define TOYMC_PARAM_FILE_H
 
@@ -29,7 +25,7 @@ typedef struct tm_parf_t_ {
 
     struct tm_parf_t_* val_obj_or_list;
     struct tm_parf_t_* last;
-    int val_int;
+    long val_int;
     double val_real;
     char* val_str;
     unsigned int val_size;
@@ -45,9 +41,9 @@ int tm_parf_object_set(tm_parf_t* obj, char* key, tm_parf_t* val);
 int tm_parf_object_get(tm_parf_t* obj, char* key, tm_parf_t** val);
 
 // integer
-tm_parf_t* tm_parf_integer_new(int val);
-int tm_parf_integer_set(tm_parf_t* obj, int val);
-int tm_parf_integer_value(tm_parf_t* obj, int* val);
+tm_parf_t* tm_parf_integer_new(long val);
+int tm_parf_integer_set(tm_parf_t* obj, long val);
+int tm_parf_integer_value(tm_parf_t* obj, long *val);
 
 // boolean
 tm_parf_t* tm_parf_boolean_new(int val);

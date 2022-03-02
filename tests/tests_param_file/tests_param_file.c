@@ -47,14 +47,14 @@ void teardown_integer() {
 }
 
 START_TEST(test_parf_integer_create) {
-    int v = -1;
+    long v = -1;
     _OK(tm_parf_integer_value(obj_integer, &v));
     ck_assert_int_eq(v, INT_VALUE);
 }
 END_TEST
 
 START_TEST(test_parf_integer_set) {
-    int v = -1;
+    long v = -1;
     _OK(tm_parf_integer_set(obj_integer, INT_OTHER_VALUE));
     _OK(tm_parf_integer_value(obj_integer, &v));
     ck_assert_int_eq(v, INT_OTHER_VALUE);
