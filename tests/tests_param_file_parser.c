@@ -1,8 +1,5 @@
-#include <check.h>
+#include "tests.h"
 #include "param_file_parser.h"
-
-#define _OK(v) ck_assert_int_eq(v, 0)
-#define _NOK(v) ck_assert_int_ne(v, 0)
 
 int tm_parf_lexer(tm_parf_token *tk, char *input, int shift);
 tm_parf_t* tm_parf_parse_string(tm_parf_token* tk, char* input, tm_parf_error* error);

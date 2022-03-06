@@ -1,6 +1,6 @@
-#include <check.h>
 #include <stdlib.h>
 #include "simulation_parameters.h"
+#include "tests.h"
 
 tm_simulation_parameters* sp;
 
@@ -8,7 +8,13 @@ START_TEST(test_read) {
     sp = tm_simulation_parameters_new();
     ck_assert_ptr_nonnull(sp);
 
-    tm_simulation_parameters_delete(sp);
+    FILE* f = fopen("test_dummy_input.inp", "r");
+    ck_assert_ptr_nonnull(f);
+
+    _OK(tm_simulation_parameters_read(sp, f));
+
+    fclose(f);
+    _OK(tm_simulation_parameters_delete(sp));
 }
 END_TEST
 

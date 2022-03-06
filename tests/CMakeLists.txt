@@ -43,6 +43,11 @@ add_unit_test(
 )
 
 # -- test_simulation_parameters
+configure_file(
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_dummy_input.inp
+        ${PROJECT_BINARY_DIR}/rundir/test/test_dummy_input.inp
+        COPYONLY)
+
 add_unit_test(
         NAME tests_simulation_parameters
         SOURCES tests_simulation_parameters.c

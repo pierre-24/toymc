@@ -497,14 +497,14 @@ int _skip_comment(tm_parf_token *tk, char *input) {
     if (_eat(tk, input, TM_TK_COMMENT) != 0) // that is not a comment?!?
         return -1;
 
-    int r = 0;
+    int r;
     while (tk->type != TM_TK_EOS && *(tk->value) != '\n') {
         r = tm_parf_lexer(tk, input, 1);
         if (r < 0)
             return r;
     }
 
-    return _skip(tk, input, TM_TK_WHITESPACE);
+    return 0;
 }
 
 /**
@@ -533,8 +533,10 @@ tm_parf_t* tm_parf_loads(char* input, tm_parf_error* error) {
 
     // read the stuff
     while(tk.type != TM_TK_EOS) {
-        if(tk.type == TM_TK_COMMENT)
+        if(tk.type == TM_TK_COMMENT) {
             _skip_comment(&tk, input);
+            _skip(&tk, input, TM_TK_WHITESPACE);
+        }
         else {
             char* key = _parse_name_lit(&tk, input, error);
             if(key == NULL) {

@@ -44,7 +44,7 @@ int tm_simulation_parameters_read(tm_simulation_parameters* p, FILE* f) {
     fseek(f, 0, SEEK_END);
     long length = ftell(f);
     fseek(f, 0, SEEK_SET);
-    char* buffer = malloc(length * sizeof (char ));
+    char* buffer = malloc((length + 1) * sizeof (char ));
 
     if(buffer == NULL)
         return -2;
@@ -53,6 +53,8 @@ int tm_simulation_parameters_read(tm_simulation_parameters* p, FILE* f) {
         free(buffer);
         return -3;
     }
+
+    buffer[length] = '\0';
 
     // getting object
     tm_parf_error e;

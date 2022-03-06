@@ -1,13 +1,10 @@
-#include <check.h>
 #include "param_file.h"
+#include "tests.h"
 
 /* Booleans */
 #define BOOLEAN_VALUE 1
 #define BOOLEAN_OTHER_VALUE 0
 tm_parf_t* obj_boolean;
-
-#define _OK(v) ck_assert_int_eq(v, 0)
-#define _NOK(v) ck_assert_int_ne(v, 0)
 
 void setup_boolean() {
     obj_boolean = tm_parf_boolean_new(BOOLEAN_VALUE);
