@@ -12,7 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
-        run: sudo apt-get install automake autoconf libtool libsubunit-dev valgrind
+        run: |
+          sudo apt-get update
+          sudo apt-get install automake autoconf libtool libsubunit-dev valgrind
       - name: compile & install check
         run: scripts/install-check.sh
       - name: cmake cversion
@@ -23,5 +25,5 @@ jobs:
         run: make
       - name: unit tests
         run: |
-          make check
+          make checks
           CK_FORK=no ctest -T memcheck

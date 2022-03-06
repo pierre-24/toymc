@@ -153,7 +153,7 @@ int _skip(tm_parf_token *tk, char *input, tm_parf_token_type t) {
  * @post \p e is filled with the correct information
  */
 void make_error(tm_parf_error* e, tm_parf_token* tk, char* what) {
-    e->what = "expected quote at beginning of string";
+    e->what = what;
     e->position = tk->position;
     e->line = tk->line;
     e->pos_in_line = tk->pos_in_line;
