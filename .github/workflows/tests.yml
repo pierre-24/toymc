@@ -25,4 +25,5 @@ jobs:
         run: make
       - name: unit tests
         run: |
-          CK_FORK=no make checks_mem
+          make build_checks
+          CK_FORK=no ctest -T memcheck
