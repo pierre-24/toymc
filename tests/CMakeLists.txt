@@ -51,3 +51,4 @@ add_unit_test(
 
 ## add an extra "check" target
 add_custom_target(checks COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${TESTNAMES})
+add_custom_target(checks_mem COMMAND ${CMAKE_CTEST_COMMAND} -T memcheck DEPENDS ${TESTNAMES})
