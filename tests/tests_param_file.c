@@ -1,6 +1,5 @@
 #include <check.h>
 #include "param_file.h"
-#include "tests_param_file.h"
 
 /* Booleans */
 #define BOOLEAN_VALUE 1
@@ -345,7 +344,9 @@ START_TEST(test_parf_object_iterate) {
 }
 END_TEST
 
-void add_tests_param_file_cases(Suite* s) {
+int main(int argc, char* argv[]) {
+    Suite* s = suite_create("tests: param_file");
+
     // boolean
     TCase* tc_boolean = tcase_create("booleans");
     tcase_add_checked_fixture(tc_boolean, setup_boolean, teardown_boolean);
@@ -397,4 +398,13 @@ void add_tests_param_file_cases(Suite* s) {
     tcase_add_test(tc_object, test_parf_object_iterate);
 
     suite_add_tcase(s, tc_object);
+
+    // run suite
+    SRunner *sr = srunner_create(s) ;
+    srunner_run_all(sr, CK_VERBOSE);
+    int number_failed = srunner_ntests_failed(sr);
+    srunner_free(sr);
+
+    // exit
+    return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

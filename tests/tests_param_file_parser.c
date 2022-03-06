@@ -1,6 +1,5 @@
 #include <check.h>
 #include "param_file_parser.h"
-#include "tests_param_file_parser.h"
 
 #define _OK(v) ck_assert_int_eq(v, 0)
 #define _NOK(v) ck_assert_int_ne(v, 0)
@@ -294,7 +293,9 @@ START_TEST(test_parser_object) {
 END_TEST
 
 
-void add_tests_param_file_parser_cases(Suite* s) {
+int main(int argc, char* argv[]) {
+    Suite* s = suite_create("tests: param_file_parser");
+
     // lexer
     TCase* tc_lexer = tcase_create("lexer");
     tcase_add_test(tc_lexer, test_lexer);
@@ -311,4 +312,13 @@ void add_tests_param_file_parser_cases(Suite* s) {
     tcase_add_test(tc_parser, test_parser_object);
 
     suite_add_tcase(s, tc_parser);
+
+    // run suite
+    SRunner *sr = srunner_create(s) ;
+    srunner_run_all(sr, CK_VERBOSE);
+    int number_failed = srunner_ntests_failed(sr);
+    srunner_free(sr);
+
+    // exit
+    return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -1,8 +1,0 @@
-#ifndef TOYMC_TESTS_H
-#define TOYMC_TESTS_H
-
-#include <check.h>
-
-void add_${TEST_FILENAME}_cases(Suite* s);
-
-#endif //TOYMC_TESTS_H
