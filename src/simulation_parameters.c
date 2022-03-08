@@ -27,6 +27,78 @@ tm_simulation_parameters* tm_simulation_parameters_new() {
     return p;
 }
 
+struct valid_key {
+    char* key;
+    tm_parf_type type;
+    void* ptr;
+};
+
+/**
+ * Fill the parameters from the object
+ * @pre \code{.c}
+ * p != NULL && obj != NULL && !TM_PARF_CHECK_P(object, TM_T_OBJECT)
+ * \endcode
+ * @param p the parameters
+ * @param obj the object
+ * @return 0 if everything went well, something else otherwise.
+ * @post \p p is set accordingly.
+ */
+int tm_simulation_parameter_fill(tm_simulation_parameters* p, tm_parf_t* obj) {
+    if(p == NULL || obj == NULL)
+        return -1;
+
+    if(TM_PARF_CHECK_P(obj, TM_T_OBJECT))
+        return -2;
+
+    // setup valid keys
+    struct valid_key keys[] = {
+            {"seed", TM_T_INTEGER, &(p->seed)}
+    };
+
+    int num_keys = sizeof(keys) / sizeof(*keys);
+
+    // crawl in
+    tm_parf_iterator * it = tm_parf_iterator_new(obj);
+    tm_parf_t* elmt;
+    int found, error;
+
+    while(tm_parf_iterator_has_next(it)) {
+        tm_parf_iterator_next(it, &elmt);
+        found = 0;
+        for(int i=0; i < num_keys && !found; i++) {
+            if(strcmp(keys[i].key, elmt->key) == 0) {
+                found = 1;
+                error = 0;
+                if(keys[i].type != elmt->val_type) {
+                    printf("key %s: expected type %d, got type %d", elmt->key, keys[i].type, elmt->val_type);
+                    error = -3;
+                } else {
+                    if (elmt->val_type == TM_T_INTEGER) {
+                        long val = 0;
+                        if(tm_parf_integer_value(elmt, &val) == 0)
+                            *((long *) (keys[i].ptr)) = val;
+                        else
+                            error = -4;
+                    }
+                }
+
+                if(error != 0) {
+                    tm_parf_iterator_delete(it);
+                    return error;
+                }
+            }
+        }
+
+        if(!found) {
+            printf("warning: key %s is invalid, maybe there is a mistake?\n", elmt->key);
+        }
+    }
+
+    tm_parf_iterator_delete(it);
+
+    return 0;
+}
+
 /**
  * Read a parameter file and set the simulation parameters accordingly
  * @pre \code{.c}
@@ -34,7 +106,7 @@ tm_simulation_parameters* tm_simulation_parameters_new() {
  * \endcode
  * @param p valid parameter structure
  * @param f valid file opened in read mode
- * @return
+ * @return 0 if everything went well, something else otherwise
  */
 int tm_simulation_parameters_read(tm_simulation_parameters* p, FILE* f) {
     if(p == NULL || f == NULL)
@@ -66,8 +138,9 @@ int tm_simulation_parameters_read(tm_simulation_parameters* p, FILE* f) {
         return -4;
     }
 
+    int r = tm_simulation_parameter_fill(p, obj);
     tm_parf_delete(obj);
-    return 0;
+    return r;
 
 }
 

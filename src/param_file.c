@@ -75,7 +75,7 @@ tm_parf_t* tm_parf_object_new() {
 /**
  * Set value at \p key to \p val
  * @pre \code{.c}
- * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_OBJECT)
+ * obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_OBJECT)
  * && key != NULL
  * \endcode
  * @param obj the object
@@ -139,7 +139,7 @@ int tm_parf_object_set(tm_parf_t* obj, char* key, tm_parf_t* val) {
 /**
  * Get the value with key \p key
  * @pre \code{.c}
- * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_OBJECT)
+ * obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_OBJECT)
  * && key != NULL
  * \endcode
  * @param object the object
@@ -182,7 +182,7 @@ tm_parf_t* tm_parf_boolean_new(int val) {
 /**
  * Change the value
  * @pre \code{.c}
- * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_BOOLEAN)
+ * obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_BOOLEAN)
  * \endcode
  * @param object the boolean object
  * @param val new value
@@ -200,7 +200,7 @@ int tm_parf_boolean_set(tm_parf_t* object, int val) {
 /**
  * Get the value
  * @pre \code{.c}
- * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_BOOLEAN)
+ * obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_BOOLEAN)
  * \endcode
  * @param object the boolean object
  * @param value the value
@@ -231,7 +231,7 @@ tm_parf_t* tm_parf_integer_new(long val) {
 /**
  * Change the value
  * @pre \code{.c}
- * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_INTEGER)
+ * obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_INTEGER)
  * \endcode
  * @param obj the integer object
  * @param val new value
@@ -249,7 +249,7 @@ int tm_parf_integer_set(tm_parf_t* obj, long val) {
 /**
  * Get the value
  * @pre \code{.c}
- * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_INTEGER)
+ * obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_INTEGER)
  * \endcode
  * @param obj the integer object
  * @param val the value
@@ -280,7 +280,7 @@ tm_parf_t* tm_parf_real_new(double val) {
 /**
  * Change the value
  * @pre \code{.c}
- * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_REAL)
+ * obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_REAL)
  * \endcode
  * @param object the real object
  * @param val new value
@@ -298,7 +298,7 @@ int tm_parf_real_set(tm_parf_t* object, double val) {
 /**
  * Get the value
  * @pre \code{.c}
- * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_REAL)
+ * obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_REAL)
  * \endcode
  * @param object the real object
  * @param value the value
@@ -333,7 +333,7 @@ tm_parf_t* tm_parf_string_new(char* val) {
 /**
  * Change the value of the string. Copy the string.
  * @pre \code{.c}
- * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_STRING)
+ * obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_STRING)
  * && val != NULL
  * \endcode
  * @param object the string object
@@ -367,7 +367,7 @@ int tm_parf_string_set(tm_parf_t* object, char* val) {
 /**
  * Get the value of the string, as a pointer
  * @pre \code{.c}
- * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_STRING)
+ * obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_STRING)
  * \endcode
  * @param object the string object
  * @param val a pointer to the value
@@ -384,7 +384,7 @@ int tm_parf_string_value(tm_parf_t* object, char **val) {
 /**
  * Get the length of the string
  * @pre \code{.c}
- * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_STRING)
+ * obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_STRING)
  * \endcode
  * @param obj the object
  * @param s the size
@@ -419,7 +419,7 @@ tm_parf_t* tm_parf_list_new() {
 /**
  * Append an element at the end of the list
  * @pre \code{.c}
- * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_LIST)
+ * obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_LIST)
  * \endcode
  * @param obj the list
  * @param val the value to add
@@ -445,7 +445,7 @@ int tm_parf_list_append(tm_parf_t* obj, tm_parf_t* val) {
 /**
  * Get the length of the list
  * @pre \code{.c}
- * obj != NULL && TM_PARF_CHECK_P(obj, TM_T_LIST)
+ * obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_LIST)
  * \endcode
  * @param obj the object
  * @param sz the size
@@ -463,8 +463,7 @@ int tm_parf_list_length(tm_parf_t* obj, unsigned int* sz) {
 /**
  * Get element \p index. If \p index is negative, start from the last element.
  * @pre \code{.c}
- * obj != NULL
- * && TM_PARF_CHECK_P(obj, TM_T_LIST)
+ * obj != NULL & !TM_PARF_CHECK_P(obj, TM_T_LIST)
  * && (0 <= index < tm_parf_list_length(obj) || -tm_parf_list_length(obj) <= index < 0)
  * \endcode
  * @param obj the list object
@@ -499,12 +498,12 @@ int tm_parf_list_get(tm_parf_t* obj, int index, tm_parf_t** val) {
 /**
  * Create an iterator
  * @pre \code{.c}
- * TM_PARF_CHECK_P(obj, TM_T_LIST) || TM_PARF_CHECK_P(obj, TM_T_OBJECT)
+ * !(TM_PARF_CHECK_P(obj, TM_T_LIST) && TM_PARF_CHECK_P(obj, TM_T_OBJECT))
  * \endcode
  * @return the initialized object, or \p NULL if malloc failed
  */
 tm_parf_iterator* tm_parf_iterator_new(tm_parf_t* obj) {
-    if (!TM_PARF_CHECK_P(obj, TM_T_LIST) && !TM_PARF_CHECK_P(obj, TM_T_OBJECT))
+    if (!(TM_PARF_CHECK_P(obj, TM_T_LIST) || TM_PARF_CHECK_P(obj, TM_T_OBJECT)))
         return NULL;
 
     tm_parf_iterator* it = malloc(sizeof(tm_parf_iterator));
@@ -553,7 +552,7 @@ int tm_parf_iterator_has_next(tm_parf_iterator* it) {
  * Get the next element (if there is one)
  * @pre \code{.c} it != NULL && tm_parf_iterator_has_next(it)\endcode
  * @param it the iterator
- * @param obj the next element
+ * @param obj the next element. It is a reference, so it should not be free'd.
  * @post \p it is iterated, \p obj is set if there was an element
  * @return 0 if there is an element, something else otherwise.
  */

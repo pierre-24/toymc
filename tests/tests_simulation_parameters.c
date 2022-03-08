@@ -11,7 +11,11 @@ START_TEST(test_read) {
     FILE* f = fopen("test_dummy_input.inp", "r");
     ck_assert_ptr_nonnull(f);
 
+    // read
     _OK(tm_simulation_parameters_read(sp, f));
+
+    // check parameter are set:
+    ck_assert_int_eq(sp->seed, 1024);
 
     fclose(f);
     _OK(tm_simulation_parameters_delete(sp));
