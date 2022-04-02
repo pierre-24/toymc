@@ -8,11 +8,11 @@ tm_simulation_parameters* tm_simulation_parameters_new() {
     tm_simulation_parameters* p = malloc(sizeof(tm_simulation_parameters));
 
     if(p != NULL) {
-        p->output = NULL;
+        p->path_output = NULL;
         p->output_freq = 5;
         p->print_freq = 1;
 
-        p->coordinates = NULL;
+        p->path_coordinates = NULL;
         p->seed = time(NULL);
         p->box_length[0] = 1.; p->box_length[1] = 1.; p->box_length[2] = 1.;
         p->VdW_cutoff = .5;
@@ -52,7 +52,24 @@ int tm_simulation_parameter_fill(tm_simulation_parameters* p, tm_parf_t* obj) {
 
     // setup valid keys
     struct valid_key keys[] = {
-            {"seed", TM_T_INTEGER, &(p->seed)}
+            // integers:
+            {"seed", TM_T_INTEGER, &(p->seed)},
+            {"output_freq", TM_T_INTEGER, &(p->output_freq)},
+            {"print_freq", TM_T_INTEGER, &(p->print_freq)},
+
+            // boolean
+            {"use_NpT", TM_T_BOOLEAN, &(p->use_NpT)},
+
+            // double
+            {"VdW_cutoff", TM_T_REAL, &(p->VdW_cutoff)},
+            {"temperature", TM_T_REAL, &(p->temperature)},
+            {"delta_displacement", TM_T_REAL, &(p->delta_displacement)},
+            {"target_pressure", TM_T_REAL, &(p->target_pressure)},
+            {"delta_volume", TM_T_REAL, &(p->delta_volume)},
+
+            // string
+            {"output", TM_T_STRING, &(p->path_output)},
+            {"coordinates", TM_T_STRING, &(p->path_coordinates)},
     };
 
     int num_keys = sizeof(keys) / sizeof(*keys);
@@ -77,6 +94,33 @@ int tm_simulation_parameter_fill(tm_simulation_parameters* p, tm_parf_t* obj) {
                         long val = 0;
                         if(tm_parf_integer_value(elmt, &val) == 0)
                             *((long *) (keys[i].ptr)) = val;
+                        else
+                            error = -4;
+                    } else if (elmt->val_type == TM_T_BOOLEAN) {
+                        int val = 0;
+                        if(tm_parf_boolean_value(elmt, &val) == 0)
+                            *((int *) (keys[i].ptr)) = val;
+                        else
+                            error = -4;
+                    } else if (elmt->val_type == TM_T_REAL) {
+                        double val = .0;
+                        if(tm_parf_real_value(elmt, &val) == 0)
+                            *((double *) (keys[i].ptr)) = val;
+                        else
+                            error = -4;
+                    } else if (elmt->val_type == TM_T_STRING) {
+                        char *val, *dest;
+                        unsigned int sz = 0;
+                        if(tm_parf_string_value(elmt, &val) == 0) {
+                            tm_parf_string_length(elmt, &sz);
+                            dest = malloc(sizeof(char) * (sz + 1));
+                            if (dest == NULL) {
+                                error = -5;
+                            } else {
+                                strcpy(dest, val);
+                                *((char **) (keys[i].ptr)) = dest;
+                            }
+                        }
                         else
                             error = -4;
                     }
@@ -153,11 +197,11 @@ int tm_simulation_parameters_delete(tm_simulation_parameters* p) {
     if(p == NULL)
         return -1;
 
-    if(p->output != NULL)
-        free(p->output);
+    if(p->path_output != NULL)
+        free(p->path_output);
 
-    if(p->coordinates != NULL)
-        free(p->coordinates);
+    if(p->path_coordinates != NULL)
+        free(p->path_coordinates);
 
     free(p);
     return 0;

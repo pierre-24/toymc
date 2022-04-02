@@ -11,7 +11,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 add_subdirectory(src)
 
 # Unit tests
-set( MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1 --errors-for-leak-kinds=definite,possible,reachable" )
+set(MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full --error-exitcode=1 --errors-for-leak-kinds=definite,possible,reachable" )
 include (CTest)
 enable_testing()
 

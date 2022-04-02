@@ -9,13 +9,13 @@
 
 typedef struct tm_simulation_parameters_ {
     // output
-    char* output;
-    int output_freq;
-    int print_freq;
+    char* path_output;
+    long output_freq;
+    long print_freq;
 
     // calculation (NVT)
     long seed;
-    char* coordinates;
+    char* path_coordinates;
     double box_length[3];
     double VdW_cutoff;
     double temperature;
