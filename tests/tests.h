@@ -3,7 +3,9 @@
 
 #include <check.h>
 
-#define _OK(v) ck_assert_int_eq(v, 0)
-#define _NOK(v) ck_assert_int_ne(v, 0)
+#include "errors.h"
+
+#define _OK(v) ck_assert_int_eq(v, TM_ERR_OK)
+#define _NOK(v) ck_assert_int_ne(v, TM_ERR_OK)
 
 #endif //TOYMC_TESTS_H

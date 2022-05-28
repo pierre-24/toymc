@@ -29,11 +29,11 @@ tm_parf_t* tm_parf_new(tm_parf_type t) {
  * Delete \p obj.
  * @pre \code{.c} obj != NULL \endcode
  * @param obj the object to delete
- * @return 0 if the object was delete, something else otherwise
+ * @return \p TM_ERR_OK if the object was delete, something else otherwise
  */
 int tm_parf_delete(tm_parf_t* obj) {
     if(obj == NULL)
-        return -1;
+        return TM_ERR_PARAM_NULL;
 
     int r = 0;
     if(obj->next != NULL)
@@ -51,12 +51,12 @@ int tm_parf_delete(tm_parf_t* obj) {
     if ((TM_parf_IS(obj, TM_T_OBJECT) || TM_parf_IS(obj, TM_T_LIST)) && obj->val_obj_or_list != NULL)
         r = tm_parf_delete(obj->val_obj_or_list);
 
-    if (r < 0)
+    if (r != TM_ERR_OK)
         return r;
 
     free(obj);
 
-    return 0;
+    return TM_ERR_OK;
 }
 
 /**
@@ -82,19 +82,19 @@ tm_parf_t* tm_parf_object_new() {
  * @param key the key
  * @param val the new value
  * @post value at key \p key is set to \p val
- * @return 0 if the value is set, something else otherwise
+ * @return \p TM_ERR_OK if the value is set, something else otherwise
  */
 int tm_parf_object_set(tm_parf_t* obj, char* key, tm_parf_t* val) {
     if (TM_PARF_CHECK_P(obj, TM_T_OBJECT))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
     if(key == NULL || val == NULL)
-        return -2;
+        return TM_ERR_PARAM_NULL;
 
     // key
     val->key = malloc(sizeof(char) * (strlen(key) + 1));
     if(val->key == NULL)
-        return -3;
+        return TM_ERR_MALLOC;
 
     strcpy(val->key, key);
 
@@ -133,7 +133,7 @@ int tm_parf_object_set(tm_parf_t* obj, char* key, tm_parf_t* val) {
 
         obj->val_size += 1;
     }
-    return 0;
+    return TM_ERR_OK;
 }
 
 /**
@@ -146,23 +146,23 @@ int tm_parf_object_set(tm_parf_t* obj, char* key, tm_parf_t* val) {
  * @param key the key
  * @param val the value
  * @post \p val point on the value
- * @return 0 if the object was found, something else otherwise
+ * @return \p TM_ERR_OK if the object was found, something else otherwise
  */
 int tm_parf_object_get(tm_parf_t* obj, char* key, tm_parf_t** val) {
     if (TM_PARF_CHECK_P(obj, TM_T_OBJECT))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
     tm_parf_t* o = obj->val_obj_or_list;
     while (o != NULL) {
         if (strcmp(o->key, key) == 0) {
             *val = o;
-            return 0;
+            return TM_ERR_OK;
         }
 
         o = o->next;
     }
 
-    return -2;
+    return TM_ERR_PARF_KNF;
 }
 
 /* boolean */
@@ -187,14 +187,14 @@ tm_parf_t* tm_parf_boolean_new(int val) {
  * @param object the boolean object
  * @param val new value
  * @post object is set to \p val
- * @return 0 if the value is set, something else otherwise
+ * @return \p TM_ERR_OK if the value is set, something else otherwise
  */
 int tm_parf_boolean_set(tm_parf_t* object, int val) {
     if (TM_PARF_CHECK_P(object, TM_T_BOOLEAN))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
     object->val_int = val;
-    return 0;
+    return TM_ERR_OK;
 }
 
 /**
@@ -205,14 +205,14 @@ int tm_parf_boolean_set(tm_parf_t* object, int val) {
  * @param object the boolean object
  * @param value the value
  * @post \p value contains the value
- * @return 0 if everything went well, something else otherwise
+ * @return \p TM_ERR_OK if everything went well, something else otherwise
  */
 int tm_parf_boolean_value(tm_parf_t* object, int* value) {
     if (TM_PARF_CHECK_P(object, TM_T_BOOLEAN))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
-    *value = object->val_int;
-    return 0;
+    *value = (object->val_int != 0);
+    return TM_ERR_OK;
 }
 
 /* integers */
@@ -236,14 +236,14 @@ tm_parf_t* tm_parf_integer_new(long val) {
  * @param obj the integer object
  * @param val new value
  * @post object is set to \p val
- * @return 0 if the value is set, something else otherwise
+ * @return \p TM_ERR_OK if the value is set, something else otherwise
  */
 int tm_parf_integer_set(tm_parf_t* obj, long val) {
     if (TM_PARF_CHECK_P(obj, TM_T_INTEGER))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
     obj->val_int = val;
-    return 0;
+    return TM_ERR_OK;
 }
 
 /**
@@ -254,14 +254,14 @@ int tm_parf_integer_set(tm_parf_t* obj, long val) {
  * @param obj the integer object
  * @param val the value
  * @post \p value contains the value
- * @return 0 if everything went well, something else otherwise
+ * @return \p TM_ERR_OK if everything went well, something else otherwise
  */
 int tm_parf_integer_value(tm_parf_t* obj, long *val) {
     if (TM_PARF_CHECK_P(obj, TM_T_INTEGER))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
     *val = obj->val_int;
-    return 0;
+    return TM_ERR_OK;
 }
 
 /* real */
@@ -285,14 +285,14 @@ tm_parf_t* tm_parf_real_new(double val) {
  * @param object the real object
  * @param val new value
  * @post object is set to \p val
- * @return 0 if the value is set, something else otherwise
+ * @return \p TM_ERR_OK if the value is set, something else otherwise
  */
 int tm_parf_real_set(tm_parf_t* object, double val) {
     if (TM_PARF_CHECK_P(object, TM_T_REAL))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
     object->val_real = val;
-    return 0;
+    return TM_ERR_OK;
 }
 
 /**
@@ -303,14 +303,14 @@ int tm_parf_real_set(tm_parf_t* object, double val) {
  * @param object the real object
  * @param value the value
  * @post value contains the value
- * @return 0 if everything went well, something else otherwise
+ * @return \p TM_ERR_OK if everything went well, something else otherwise
  */
 int tm_parf_real_value(tm_parf_t* object, double * value) {
     if (TM_PARF_CHECK_P(object, TM_T_REAL))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
     *value = object->val_real;
-    return 0;
+    return TM_ERR_OK;
 }
 
 /* string */
@@ -339,14 +339,14 @@ tm_parf_t* tm_parf_string_new(char* val) {
  * @param object the string object
  * @param val new value of the string
  * @post object is set to \p val
- * @return 0 if the value is set, something else otherwise
+ * @return \p TM_ERR_OK if the value is set, something else otherwise
  */
 int tm_parf_string_set(tm_parf_t* object, char* val) {
     if (TM_PARF_CHECK_P(object, TM_T_STRING))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
     if (val == NULL)
-        return -1;
+        return TM_ERR_PARAM_NULL;
 
     if (object->val_str != NULL) {
         free(object->val_str);
@@ -357,11 +357,11 @@ int tm_parf_string_set(tm_parf_t* object, char* val) {
     object->val_str = malloc((object->val_size + 1) * sizeof(char));
 
     if (object->val_str == NULL)
-        return -1;
+        return TM_ERR_MALLOC;
 
     strcpy(object->val_str, val);
 
-    return 0;
+    return TM_ERR_OK;
 }
 
 /**
@@ -372,14 +372,14 @@ int tm_parf_string_set(tm_parf_t* object, char* val) {
  * @param object the string object
  * @param val a pointer to the value
  * @post \p val contains the value
- * @return 0 if everything went well, something else otherwise
+ * @return \p TM_ERR_OK if everything went well, something else otherwise
  */
 int tm_parf_string_value(tm_parf_t* object, char **val) {
     if (TM_PARF_CHECK_P(object, TM_T_STRING))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
     *val = object->val_str;
-    return 0;
+    return TM_ERR_OK;
 }
 /**
  * Get the length of the string
@@ -389,17 +389,17 @@ int tm_parf_string_value(tm_parf_t* object, char **val) {
  * @param obj the object
  * @param s the size
  * @post \p s is set to the size of the string
- * @return 0 if everything went well, something else otherwise
+ * @return \p TM_ERR_OK if everything went well, something else otherwise
  */
 int tm_parf_string_length(tm_parf_t *object, unsigned int *s) {
     if (TM_PARF_CHECK_P(object, TM_T_STRING))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
     if (object->val_str == NULL)
-        return -1;
+        return TM_ERR_PARAM_NULL;
 
     *s = object->val_size;
-    return 0;
+    return TM_ERR_OK;
 }
 
 /* list */
@@ -424,11 +424,11 @@ tm_parf_t* tm_parf_list_new() {
  * @param obj the list
  * @param val the value to add
  * @post \p val is added to the list
- * @return 0 if the element was added, something else otherwise
+ * @return \p TM_ERR_OK if the element was added, something else otherwise
  */
 int tm_parf_list_append(tm_parf_t* obj, tm_parf_t* val) {
     if (TM_PARF_CHECK_P(obj, TM_T_LIST))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
     if(obj->val_obj_or_list == NULL) {
         obj->val_obj_or_list = val;
@@ -439,7 +439,7 @@ int tm_parf_list_append(tm_parf_t* obj, tm_parf_t* val) {
     }
 
     obj->val_size += 1;
-    return 0;
+    return TM_ERR_OK;
 }
 
 /**
@@ -450,14 +450,14 @@ int tm_parf_list_append(tm_parf_t* obj, tm_parf_t* val) {
  * @param obj the object
  * @param sz the size
  * @post \p sz is set to the size of the list
- * @return 0 if everything went well, something else otherwise
+ * @return \p TM_ERR_OK if everything went well, something else otherwise
  */
 int tm_parf_list_length(tm_parf_t* obj, unsigned int* sz) {
     if (TM_PARF_CHECK_P(obj, TM_T_LIST))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
     *sz = obj->val_size;
-    return 0;
+    return TM_ERR_OK;
 }
 
 /**
@@ -470,11 +470,11 @@ int tm_parf_list_length(tm_parf_t* obj, unsigned int* sz) {
  * @param index the index
  * @param val the value
  * @post \p val point to the object at index \p index, if there is such index.
- * @return 0 if there is an object at the requested index, something else otherwise
+ * @return \p TM_ERR_OK if there is an object at the requested index, something else otherwise
  */
 int tm_parf_list_get(tm_parf_t* obj, int index, tm_parf_t** val) {
     if (TM_PARF_CHECK_P(obj, TM_T_LIST))
-        return -1;
+        return TM_ERR_PARF_NCHECK;
 
     if (index < 0)
         index = (int) obj->val_size + index;
@@ -490,7 +490,7 @@ int tm_parf_list_get(tm_parf_t* obj, int index, tm_parf_t** val) {
     }
 
     *val = o;
-    return 0;
+    return TM_ERR_OK;
 }
 
 /* iterator */
@@ -519,20 +519,20 @@ tm_parf_iterator* tm_parf_iterator_new(tm_parf_t* obj) {
  * Delete iterator \p it.
  * @pre \code{.c} it != NULL\endcode
  * @param it the iterator
- * @return 0 if the iterator was delete, something else otherwise
+ * @return \p TM_ERR_OK if the iterator was delete, something else otherwise
  */
 int tm_parf_iterator_delete(tm_parf_iterator* it) {
     if(it == NULL)
-        return -1;
+        return TM_ERR_PARAM_NULL;
 
     free(it);
-    return 0;
+    return TM_ERR_OK;
 }
 
 /**
  *
  * @param it
- * @return 0 if \p it is \p NULL or if there is no next value, 1 otherwise
+ * @return \p TM_ERR_OK if \p it is \p NULL or if there is no next value, 1 otherwise
  * @example \code{.c}
  * tm_parf_iterator* it = tm_iterator_new(obj);
  * tm_parf_t* elmt;
@@ -543,7 +543,7 @@ int tm_parf_iterator_delete(tm_parf_iterator* it) {
  */
 int tm_parf_iterator_has_next(tm_parf_iterator* it) {
     if(it == NULL)
-        return 0;
+        return TM_ERR_OK;
 
     return it->next != NULL;
 }
@@ -554,18 +554,18 @@ int tm_parf_iterator_has_next(tm_parf_iterator* it) {
  * @param it the iterator
  * @param obj the next element. It is a reference, so it should not be free'd.
  * @post \p it is iterated, \p obj is set if there was an element
- * @return 0 if there is an element, something else otherwise.
+ * @return \p TM_ERR_OK if there is an element, something else otherwise.
  */
 int tm_parf_iterator_next(tm_parf_iterator* it, tm_parf_t** obj) {
     if(it == NULL)
-        return -1;
+        return TM_ERR_PARAM_NULL;
 
     if(it->next == NULL)
-        return -1;
+        return TM_ERR_PARAM_NULL;
 
     *obj = it->next;
     it->next = it->next->next;
 
-    return 0;
+    return TM_ERR_OK;
 }
 
