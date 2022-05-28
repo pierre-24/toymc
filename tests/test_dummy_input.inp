@@ -4,4 +4,4 @@ seed 1024
 
 coordinates "test.xyz"
 
-box_length [5. 5. 5.]
+box_length [5. 5.5 6.]

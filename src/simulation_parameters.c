@@ -29,14 +29,141 @@ tm_simulation_parameters* tm_simulation_parameters_new() {
 
 struct valid_key {
     char* key;
-    tm_parf_type type;
+    char* types;
     void* ptr;
 };
 
 /**
+ * Fill a parameter, if of the correct type
+ * @pre \code{.c}
+ * elmt != NULL && ptr != NULL
+ * \endcode
+ * @param elmt the object that should contain the value
+ * @param type expected type of the object (\p i, \p b, \b r or \p s)
+ * @param ptr pointer to the value to fill
+ * @return 0 if everything went well, something else otherwise.
+ * @post \p ptr is set accordingly.
+ */
+int simulation_parameter_fill_single_value_key(tm_parf_t* elmt, char type, void * ptr) {
+    int error = 0;
+    if(type == 'i') {
+        if(elmt->val_type != TM_T_INTEGER) {
+            printf("error: key %s: expected type %d, got %d\n", elmt->key, TM_T_INTEGER, elmt->val_type);
+            error = -4;
+        } else {
+            long val = 0;
+            if(tm_parf_integer_value(elmt, &val) == 0)
+                *((long *) (ptr)) = val;
+            else
+                error = -5;
+        }
+    } else if(type == 'b') {
+        if(elmt->val_type != TM_T_BOOLEAN) {
+            printf("error: key %s: expected type %d, got %d\n", elmt->key, TM_T_BOOLEAN, elmt->val_type);
+            error = -4;
+        } else {
+            int val = 0;
+            if(tm_parf_boolean_value(elmt, &val) == 0)
+                *((int *) (ptr)) = val;
+            else
+                error = -5;
+        }
+    } else if(type == 'r') {
+        if(elmt->val_type != TM_T_REAL) {
+            printf("error: key %s: expected type %d, got %d\n", elmt->key, TM_T_REAL, elmt->val_type);
+            error = -4;
+        } else {
+            double val = 0;
+            if(tm_parf_real_value(elmt, &val) == 0)
+                *((double *) (ptr)) = val;
+            else
+                error = -5;
+        }
+    } else if(type == 's') {
+        if(elmt->val_type != TM_T_STRING) {
+            printf("error: key %s: expected type %d, got %d\n", elmt->key, TM_T_STRING, elmt->val_type);
+            error = -4;
+        } else {
+            char* val, *dest;
+            unsigned int sz;
+            if(tm_parf_string_value(elmt, &val) == 0) {
+                tm_parf_string_length(elmt, &sz);
+                dest = malloc(sizeof(char) * (sz + 1));
+                if (dest == NULL) {
+                    error = -6;
+                } else {
+                    strcpy(dest, val);
+                    *((char **) (ptr)) = dest;
+                }
+            } else
+                error = -5;
+        }
+    } else {
+        error = -3;
+    }
+
+    return error;
+}
+
+/**
+ * Fill a list parameter, if of the correct type
+ * @pre \code{.c}
+ * elmt != NULL && ptr != NULL && !TM_PARF_CHECK_P(elmt, TM_T_LIST)
+ * \endcode
+ * @param elmt the object that should contain the value
+ * @param types expected type of the elements of the list (\p i, \p b, \b r or \p s, then the length of the list)
+ * @param ptr pointer to the value to fill
+ * @return 0 if everything went well, something else otherwise.
+ * @post \p ptr is set accordingly.
+ */
+int simulation_parameter_fill_multiple_values_key(tm_parf_t* elmt, char* types, void * ptr) {
+    if(TM_PARF_CHECK_P(elmt, TM_T_LIST)) {
+        return -2;
+    }
+
+    unsigned int sz = atoi(types + 1), szi, szp;
+
+    if(tm_parf_list_length(elmt, &szi) != 0) {
+        return -3;
+    }
+
+    if (sz != szi) {
+        printf("error: key %s: expected size %d, got %d", elmt->key, sz, szi);
+        return -3;
+    }
+
+    switch (types[0]) {
+        case 'i':
+            szp = sizeof(long);
+            break;
+        case 'r':
+            szp = sizeof(double);
+            break;
+        case 'b':
+            szp = sizeof(int);
+            break;
+        default:
+            szp = 1;
+            break;
+    }
+
+    int error = 0;
+    tm_parf_iterator* it = tm_parf_iterator_new(elmt);
+    tm_parf_t* elmt_list;
+    for(unsigned int i = 0; i < szi && error == 0; i++) {
+        tm_parf_iterator_next(it, &elmt_list);
+        error = simulation_parameter_fill_single_value_key(elmt_list, types[0], ptr + i * szp); // TODO: arithmetic on void* pointer is GNU
+    }
+
+    tm_parf_iterator_delete(it);
+    return error;
+}
+
+
+/**
  * Fill the parameters from the object
  * @pre \code{.c}
- * p != NULL && obj != NULL && !TM_PARF_CHECK_P(object, TM_T_OBJECT)
+ * p != NULL && obj != NULL && !TM_PARF_CHECK_P(obj, TM_T_OBJECT)
  * \endcode
  * @param p the parameters
  * @param obj the object
@@ -53,23 +180,26 @@ int tm_simulation_parameter_fill(tm_simulation_parameters* p, tm_parf_t* obj) {
     // setup valid keys
     struct valid_key keys[] = {
             // integers:
-            {"seed", TM_T_INTEGER, &(p->seed)},
-            {"output_freq", TM_T_INTEGER, &(p->output_freq)},
-            {"print_freq", TM_T_INTEGER, &(p->print_freq)},
+            {"seed", "i", &(p->seed)},
+            {"output_freq", "i", &(p->output_freq)},
+            {"print_freq", "i", &(p->print_freq)},
 
             // boolean
-            {"use_NpT", TM_T_BOOLEAN, &(p->use_NpT)},
+            {"use_NpT", "b", &(p->use_NpT)},
 
             // double
-            {"VdW_cutoff", TM_T_REAL, &(p->VdW_cutoff)},
-            {"temperature", TM_T_REAL, &(p->temperature)},
-            {"delta_displacement", TM_T_REAL, &(p->delta_displacement)},
-            {"target_pressure", TM_T_REAL, &(p->target_pressure)},
-            {"delta_volume", TM_T_REAL, &(p->delta_volume)},
+            {"VdW_cutoff", "r", &(p->VdW_cutoff)},
+            {"temperature", "r", &(p->temperature)},
+            {"delta_displacement", "r", &(p->delta_displacement)},
+            {"target_pressure", "r", &(p->target_pressure)},
+            {"delta_volume", "r", &(p->delta_volume)},
 
             // string
-            {"output", TM_T_STRING, &(p->path_output)},
-            {"coordinates", TM_T_STRING, &(p->path_coordinates)},
+            {"output", "s", &(p->path_output)},
+            {"coordinates", "s", &(p->path_coordinates)},
+
+            // list
+            {"box_length", "r3", &(p->box_length)}
     };
 
     int num_keys = sizeof(keys) / sizeof(*keys);
@@ -82,55 +212,23 @@ int tm_simulation_parameter_fill(tm_simulation_parameters* p, tm_parf_t* obj) {
     while(tm_parf_iterator_has_next(it)) {
         tm_parf_iterator_next(it, &elmt);
         found = 0;
+        error = 0;
+
+        // normal keys
         for(int i=0; i < num_keys && !found; i++) {
             if(strcmp(keys[i].key, elmt->key) == 0) {
                 found = 1;
-                error = 0;
-                if(keys[i].type != elmt->val_type) {
-                    printf("key %s: expected type %d, got type %d", elmt->key, keys[i].type, elmt->val_type);
-                    error = -3;
+                if(strlen(keys[i].types) == 1) {
+                    error = simulation_parameter_fill_single_value_key(elmt, keys[i].types[0], keys[i].ptr);
                 } else {
-                    if (elmt->val_type == TM_T_INTEGER) {
-                        long val = 0;
-                        if(tm_parf_integer_value(elmt, &val) == 0)
-                            *((long *) (keys[i].ptr)) = val;
-                        else
-                            error = -4;
-                    } else if (elmt->val_type == TM_T_BOOLEAN) {
-                        int val = 0;
-                        if(tm_parf_boolean_value(elmt, &val) == 0)
-                            *((int *) (keys[i].ptr)) = val;
-                        else
-                            error = -4;
-                    } else if (elmt->val_type == TM_T_REAL) {
-                        double val = .0;
-                        if(tm_parf_real_value(elmt, &val) == 0)
-                            *((double *) (keys[i].ptr)) = val;
-                        else
-                            error = -4;
-                    } else if (elmt->val_type == TM_T_STRING) {
-                        char *val, *dest;
-                        unsigned int sz = 0;
-                        if(tm_parf_string_value(elmt, &val) == 0) {
-                            tm_parf_string_length(elmt, &sz);
-                            dest = malloc(sizeof(char) * (sz + 1));
-                            if (dest == NULL) {
-                                error = -5;
-                            } else {
-                                strcpy(dest, val);
-                                *((char **) (keys[i].ptr)) = dest;
-                            }
-                        }
-                        else
-                            error = -4;
-                    }
-                }
-
-                if(error != 0) {
-                    tm_parf_iterator_delete(it);
-                    return error;
+                    error = simulation_parameter_fill_multiple_values_key(elmt, keys[i].types, keys[i].ptr);
                 }
             }
+        }
+
+        if(error != 0) {
+            tm_parf_iterator_delete(it);
+            return error;
         }
 
         if(!found) {

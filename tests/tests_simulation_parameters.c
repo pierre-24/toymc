@@ -17,6 +17,14 @@ START_TEST(test_read) {
     // check parameter are set:
     ck_assert_int_eq(sp->seed, 1024);
 
+    ck_assert_double_eq(sp->VdW_cutoff, 5.);
+
+    ck_assert_double_eq(sp->box_length[0], 5.);
+    ck_assert_double_eq(sp->box_length[1], 5.5);
+    ck_assert_double_eq(sp->box_length[2], 6.);
+
+    ck_assert_str_eq(sp->path_coordinates, "test.xyz");
+
     fclose(f);
     _OK(tm_simulation_parameters_delete(sp));
 }
