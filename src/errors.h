@@ -54,4 +54,10 @@ static char* error_expl[] = {
         "Not an error (LAST)"
 };
 
+void tm_set_debug_level(int level);
+void tm_print_debug_msg(char* file, int line, char* format, ...);
+void tm_print_warning_msg(char *file, int line, char *format, ...);
+void tm_print_error_msg(char* file, int line, char* format, ...);
+void tm_print_error_code(char* file, int line, int errcode);
+
 #endif //TOYMC_ERRORS_H

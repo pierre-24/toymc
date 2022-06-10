@@ -150,9 +150,10 @@ int simulation_parameter_fill_multiple_values_key(tm_parf_t* elmt, char* types, 
     int error = 0;
     tm_parf_iterator* it = tm_parf_iterator_new(elmt);
     tm_parf_t* elmt_list;
+    char* ptr2 = (char*) ptr;
     for(unsigned int i = 0; i < szi && error == 0; i++) {
         tm_parf_iterator_next(it, &elmt_list);
-        error = simulation_parameter_fill_single_value_key(elmt_list, types[0], ptr + i * szp); // TODO: arithmetic on void* pointer is GNU
+        error = simulation_parameter_fill_single_value_key(elmt_list, types[0], (void*) (ptr2 + i * szp));
     }
 
     tm_parf_iterator_delete(it);
@@ -217,6 +218,7 @@ int tm_simulation_parameter_fill(tm_simulation_parameters* p, tm_parf_t* obj) {
         for(int i=0; i < num_keys && !found; i++) {
             if(strcmp(keys[i].key, elmt->key) == 0) {
                 found = 1;
+                tm_print_debug_msg(__FILE__, __LINE__, "treating key %s (kind %s)", keys[i].key, keys[i].types);
                 if(strlen(keys[i].types) == 1) {
                     error = simulation_parameter_fill_single_value_key(elmt, keys[i].types[0], keys[i].ptr);
                 } else {
@@ -231,7 +233,7 @@ int tm_simulation_parameter_fill(tm_simulation_parameters* p, tm_parf_t* obj) {
         }
 
         if(!found) {
-            printf("warning: key %s is invalid, maybe there is a mistake?\n", elmt->key);
+            tm_print_warning_msg(__FILE__, __LINE__, "key %s is unknown, maybe there is a mistake?", elmt->key);
         }
     }
 
@@ -241,7 +243,7 @@ int tm_simulation_parameter_fill(tm_simulation_parameters* p, tm_parf_t* obj) {
 }
 
 /**
- * Read a parameter file and set the simulation parameters accordingly
+ * Read a parameter file and set the simulation parameters accordingly.
  * @pre \code{.c}
  * p != NULL && f != NULL
  * \endcode
@@ -275,7 +277,7 @@ int tm_simulation_parameters_read(tm_simulation_parameters* p, FILE* f) {
     free(buffer);
 
     if (obj == NULL) {
-        printf("error while reading parameter file (on line %d): %s", e.line, e.what);
+        tm_print_error_msg(__FILE__, __LINE__, "error while reading parameter file (on line %d): %s", e.line, e.what);
         return TM_ERR_PARF;
     }
 
