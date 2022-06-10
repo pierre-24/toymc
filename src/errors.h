@@ -14,6 +14,7 @@ enum {
     // logic (should not happen)
     TM_ERR_PARAM_NULL,
     TM_ERR_API,
+    TM_ERR_OUT_OF_BOUND,
 
     // file
     TM_ERR_READ,
@@ -37,8 +38,9 @@ static char* error_expl[] = {
 
         "malloc() failed",
 
-        "One of the parameter is NULL (STH)",
-        "Programmer error (STH)",
+        "One of the parameter is NULL (SNH)",
+        "Programmer error (SNH)",
+        "Out of bound (SNH)",
 
         "Error while reading file",
 

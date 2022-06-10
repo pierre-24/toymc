@@ -24,6 +24,7 @@ typedef enum tm_parf_token_type_ {
 
     TM_TK_LAST
 } tm_parf_token_type;
+
 /**
  * @brief Token used by the Lexer. Serve as placeholder of the position.
  * Fields are \code{.c}
