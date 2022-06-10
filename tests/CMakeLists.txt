@@ -31,7 +31,14 @@ set(CHECK_EXTRA_LIBS m subunit rt pthread)
 # -- test_param_file
 add_unit_test(
         NAME tests_param_file
-        SOURCES tests_param_file.c
+        SOURCES tests_param_file_objects.c
+        LIBS toymc ${CHECK_LIBRARIES} ${CHECK_EXTRA_LIBS}
+)
+
+# -- tests_lexer
+add_unit_test(
+        NAME tests_lexer
+        SOURCES tests_lexer.c
         LIBS toymc ${CHECK_LIBRARIES} ${CHECK_EXTRA_LIBS}
 )
 
@@ -46,7 +53,8 @@ add_unit_test(
 configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/test_dummy_input.inp
         ${PROJECT_BINARY_DIR}/rundir/test/test_dummy_input.inp
-        COPYONLY)
+        COPYONLY
+)
 
 add_unit_test(
         NAME tests_simulation_parameters

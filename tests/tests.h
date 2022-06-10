@@ -1,6 +1,7 @@
 #ifndef TOYMC_TESTS_H
 #define TOYMC_TESTS_H
 
+#include <stdlib.h>
 #include <check.h>
 
 #include "errors.h"

@@ -1,7 +1,8 @@
 #include "tests.h"
 #include "param_file_parser.h"
+#include "lexer.h"
 
-int tm_parf_lexer(tm_parf_token *tk, char *input, int shift);
+int tm_lexer_advance(tm_parf_token *tk, char *input, int shift);
 tm_parf_t* tm_parf_parse_string(tm_parf_token* tk, char* input, tm_parf_error* error);
 tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* error);
 tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* error);
@@ -10,62 +11,24 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
 tm_parf_error e;
 
 tm_parf_t *parse_string(tm_parf_token *t, char *input) {
-    _OK(tm_parf_token_init(t, input));
+    _OK(tm_lexer_token_init(t, input));
     return tm_parf_parse_string(t, input, &e);
 }
 
 tm_parf_t *parse_number(tm_parf_token *t, char *input) {
-    _OK(tm_parf_token_init(t, input));
+    _OK(tm_lexer_token_init(t, input));
     return tm_parf_parse_number(t, input, &e);
 }
 
 tm_parf_t *parse_boolean(tm_parf_token *t, char *input) {
-    _OK(tm_parf_token_init(t, input));
+    _OK(tm_lexer_token_init(t, input));
     return tm_parf_parse_boolean(t, input, &e);
 }
 
 tm_parf_t *parse_list(tm_parf_token *t, char *input) {
-    _OK(tm_parf_token_init(t, input));
+    _OK(tm_lexer_token_init(t, input));
     return tm_parf_parse_list(t, input, &e);
 }
-
-START_TEST(test_lexer) {
-    char* str = "ab[-9]";
-    int l = strlen(str);
-    tm_parf_token t;
-    _OK(tm_parf_token_init(&t, str));
-
-    tm_parf_token_type tab[] = {
-            TM_TK_CHAR, TM_TK_CHAR, TM_TK_LBRACKET, TM_TK_DASH, TM_TK_DIGIT, TM_TK_RBRACKET, TM_TK_EOS};
-
-    for(int i=0; i <= l; i++) {
-        ck_assert_int_eq(t.type, tab[i]);
-        tm_parf_lexer(&t, str, 1);
-    }
-}
-END_TEST
-
-START_TEST(test_lexer_line) {
-    char* str = "a\nb1\ncde\nf2";
-    int l = strlen(str);
-    tm_parf_token t;
-    _OK(tm_parf_token_init(&t, str));
-    int line = 1, pos_in_line = 0;
-
-    for(int i=0; i < l; i++) {
-        ck_assert_int_eq(t.line, line);
-        ck_assert_int_eq(t.pos_in_line, pos_in_line);
-
-        tm_parf_lexer(&t, str, 1);
-        if(*(t.value) == '\n') {
-            line += 1;
-            pos_in_line = 0;
-        } else {
-            pos_in_line += 1;
-        }
-    }
-}
-END_TEST
 
 START_TEST(test_parser_string) {
     char tmp[100];
@@ -86,7 +49,7 @@ START_TEST(test_parser_string) {
     // second test (with quote in it)
     val = "a \\\"lapin\\\" is a rabbit, in french";
     sprintf(tmp, "\"%s\"", val);
-    tm_parf_lexer(&t, tmp, 0);
+    tm_lexer_advance(&t, tmp, 0);
 
     obj = parse_string(&t, tmp);
     _OK(tm_parf_string_value(obj, &found));
@@ -292,13 +255,6 @@ END_TEST
 
 int main(int argc, char* argv[]) {
     Suite* s = suite_create("tests: param_file_parser");
-
-    // lexer
-    TCase* tc_lexer = tcase_create("lexer");
-    tcase_add_test(tc_lexer, test_lexer);
-    tcase_add_test(tc_lexer, test_lexer_line);
-
-    suite_add_tcase(s, tc_lexer);
 
     // parser
     TCase* tc_parser = tcase_create("parser");

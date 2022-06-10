@@ -1,4 +1,4 @@
-#include "param_file.h"
+#include "param_file_objects.h"
 #include "tests.h"
 
 /* Booleans */
@@ -342,10 +342,10 @@ START_TEST(test_parf_object_iterate) {
 END_TEST
 
 int main(int argc, char* argv[]) {
-    Suite* s = suite_create("tests: param_file");
+    Suite* s = suite_create("tests: param_file_objects");
 
     // boolean
-    TCase* tc_boolean = tcase_create("booleans");
+    TCase* tc_boolean = tcase_create("boolean");
     tcase_add_checked_fixture(tc_boolean, setup_boolean, teardown_boolean);
     tcase_add_test(tc_boolean, test_parf_boolean_create);
     tcase_add_test(tc_boolean, test_parf_boolean_set);
@@ -353,7 +353,7 @@ int main(int argc, char* argv[]) {
     suite_add_tcase(s, tc_boolean);
 
     // integers
-    TCase* tc_integer = tcase_create("integers");
+    TCase* tc_integer = tcase_create("integer");
     tcase_add_checked_fixture(tc_integer, setup_integer, teardown_integer);
     tcase_add_test(tc_integer, test_parf_integer_create);
     tcase_add_test(tc_integer, test_parf_integer_set);
@@ -361,7 +361,7 @@ int main(int argc, char* argv[]) {
     suite_add_tcase(s, tc_integer);
 
     // reals
-    TCase* tc_real = tcase_create("reals");
+    TCase* tc_real = tcase_create("real");
     tcase_add_checked_fixture(tc_real, setup_real, teardown_real);
     tcase_add_test(tc_real, test_parf_real_create);
     tcase_add_test(tc_real, test_parf_real_set);
@@ -369,7 +369,7 @@ int main(int argc, char* argv[]) {
     suite_add_tcase(s, tc_real);
 
     // strings
-    TCase* tc_string = tcase_create("strings");
+    TCase* tc_string = tcase_create("string");
     tcase_add_checked_fixture(tc_string, setup_string, teardown_string);
     tcase_add_test(tc_string, test_parf_string_create);
     tcase_add_test(tc_string, test_parf_string_length);
@@ -388,7 +388,7 @@ int main(int argc, char* argv[]) {
     suite_add_tcase(s, tc_list);
 
     // objects
-    TCase* tc_object = tcase_create("objects");
+    TCase* tc_object = tcase_create("object");
     tcase_add_checked_fixture(tc_object, setup_object, teardown_object);
     tcase_add_test(tc_object, test_parf_object_set);
     tcase_add_test(tc_object, test_parf_object_get);

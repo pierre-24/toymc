@@ -1,5 +1,5 @@
-#ifndef TOYMC_PARAM_FILE_H
-#define TOYMC_PARAM_FILE_H
+#ifndef TOYMC_PARAM_FILE_OBJECTS_H
+#define TOYMC_PARAM_FILE_OBJECTS_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,4 +80,4 @@ int tm_parf_iterator_delete(tm_parf_iterator* it);
 int tm_parf_iterator_has_next(tm_parf_iterator* it);
 int tm_parf_iterator_next(tm_parf_iterator* it, tm_parf_t** obj);
 
-#endif //TOYMC_PARAM_FILE_H
+#endif //TOYMC_PARAM_FILE_OBJECTS_H

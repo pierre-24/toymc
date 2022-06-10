@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#include "param_file.h"
+#include "param_file_objects.h"
 #include "param_file_parser.h"
 #include <time.h>
 

@@ -1,147 +1,6 @@
 #include "param_file_parser.h"
 #include <ctype.h>
 
-int lexer_translator[] = {
-        0x20, TM_TK_WHITESPACE,
-        0x0d, TM_TK_WHITESPACE,
-        0x0a, TM_TK_WHITESPACE,
-        0x09, TM_TK_WHITESPACE,
-        '0',  TM_TK_DIGIT,
-        '1',  TM_TK_DIGIT,
-        '2',  TM_TK_DIGIT,
-        '3',  TM_TK_DIGIT,
-        '4',  TM_TK_DIGIT,
-        '5',  TM_TK_DIGIT,
-        '6',  TM_TK_DIGIT,
-        '7',  TM_TK_DIGIT,
-        '8',  TM_TK_DIGIT,
-        '9',  TM_TK_DIGIT,
-        '#',  TM_TK_COMMENT,
-        ',',  TM_TK_COMMA,
-        '.',  TM_TK_DOT,
-        '[',  TM_TK_LBRACKET,
-        ']',  TM_TK_RBRACKET,
-        '\\', TM_TK_ESCAPE,
-        '"',  TM_TK_QUOTE,
-        '-',  TM_TK_DASH,
-        '+',  TM_TK_PLUS,
-        '\0', TM_TK_EOS,
-
-        -1
-};
-
-/**
- * Set the token according to the character at \p position
- * @pre \code{.c}
- * tk != NULL && input != NULL
- * && 0 <= tk->position + shift < strlen(input)
- * \endcode
- * @param tk token object
- * @param input input string
- * @param shift shift with respect to the current position (should be 0 or 1)
- * @return \p TM_ERR_OK if everything went well, something else otherwise
- */
-int tm_parf_lexer(tm_parf_token *tk, char *input, int shift) {
-    if (tk == NULL || input == NULL)
-        return TM_ERR_PARAM_NULL;
-
-    if (shift > 1 || shift < 0)
-        return TM_ERR_LEXER_SHIFT;
-
-    if (tk->position + shift < 0)
-        return TM_ERR_LEXER_SHIFT;
-
-    char c = input[tk->position + shift];
-    tm_parf_token_type t = TM_TK_CHAR;
-
-    int* tr = lexer_translator;
-    while (*tr != -1) {
-        if (c == *tr) {
-            t = *(tr+1);
-            break;
-        }
-
-        tr += 2;
-    }
-
-    tk->position += shift;
-    tk->type = t;
-    tk->value = input + tk->position;
-
-    if(*(tk->value) == '\n') {
-        tk->line += 1;
-        tk->pos_in_line = 0;
-    } else {
-        tk->pos_in_line += shift;
-    }
-
-    return TM_ERR_OK;
-}
-
-/**
- * Initialize the token \p tk with the first character of \p input.
- * @pre \code{.c}
- * tk != NULL && input != NULL
- * && strlen(input) >= 1
- * \endcode
- * @param tk the token
- * @post \p tk is initialized.
- * @return \p TM_ERR_OK if everything went well, something else otherwise
- */
-int tm_parf_token_init(tm_parf_token* tk, char* input) {
-    if(tk == NULL)
-        return TM_ERR_PARAM_NULL;
-
-    tk->position = 0;
-    tk->line = 1;
-    tk->pos_in_line = 0;
-
-    return tm_parf_lexer(tk, input, 0);
-}
-
-/**
- * Advance to the next token if the current one if of type \p t
- * @pre \code{.c}
- * tk != NULL && input != NULL
- * && 0 <= tk->position < strlen(input)
- * \endcode
- * @param tk valid token
- * @param input input string
- * @param t type
- * @post if token is of type \p t, advance to the next token
- * @return \p TM_ERR_OK if token was of type \p t, something else otherwise
- */
-int _eat(tm_parf_token *tk, char *input, tm_parf_token_type t) {
-    if (tk->type != t)
-        return TM_ERR_LEXER_UNEXPECTED_TOKEN;
-
-    return tm_parf_lexer(tk, input, 1);
-}
-
-/**
- * Advance to the next token until one is of type \p t.
- * @pre \code{.c}
- * tk != NULL && input != NULL
- * && 0 <= tk->position < strlen(input)
- * \endcode
- * @param tk valid token
- * @param input input string
- * @param t type
- * @post the token is of type \p t
- * @return \p TM_ERR_OK if token was of type \p t, something else otherwise
- */
-int _skip(tm_parf_token *tk, char *input, tm_parf_token_type t) {
-    int r;
-
-    while (tk->type == t) {
-        r = tm_parf_lexer(tk, input, 1);
-        if (r != TM_ERR_OK)
-            return r;
-    }
-
-    return TM_ERR_OK;
-}
-
 /**
  * Fill the error
  * @pre \code{.c}
@@ -171,7 +30,7 @@ void make_error(tm_parf_error* e, tm_parf_token* tk, char* what) {
  * @return \p NULL if it was not able to read the string, a pointer to the string otherwise
  */
 char* _parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
-    if (_eat(tk, input, TM_TK_QUOTE) != TM_ERR_OK) {
+    if (tm_lexer_eat(tk, input, TM_TK_QUOTE) != TM_ERR_OK) {
         make_error(error, tk, "expected quote at beginning of string");
         return NULL;
     }
@@ -207,10 +66,10 @@ char* _parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
             tmp = realloc(tmp, fac * mul * sizeof(char));
         }
 
-        tm_parf_lexer(tk, input, 1);
+        tm_lexer_advance(tk, input, 1);
     }
 
-    if (_eat(tk, input, TM_TK_QUOTE) != TM_ERR_OK) {
+    if (tm_lexer_eat(tk, input, TM_TK_QUOTE) != TM_ERR_OK) {
         make_error(error, tk, "expected quote to end string");
         free(tmp);
         return NULL;
@@ -268,32 +127,32 @@ tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* e
     int dot_found = tk->type == TM_TK_DOT;
     int exp_found = 0;
 
-    if (_eat(tk, input, TM_TK_DIGIT) != TM_ERR_OK
-        && _eat(tk, input, TM_TK_DASH) != TM_ERR_OK
-        && _eat(tk, input, TM_TK_PLUS) != TM_ERR_OK
-        && _eat(tk, input, TM_TK_DOT) != TM_ERR_OK) {
+    if (tm_lexer_eat(tk, input, TM_TK_DIGIT) != TM_ERR_OK
+        && tm_lexer_eat(tk, input, TM_TK_DASH) != TM_ERR_OK
+        && tm_lexer_eat(tk, input, TM_TK_PLUS) != TM_ERR_OK
+        && tm_lexer_eat(tk, input, TM_TK_DOT) != TM_ERR_OK) {
         make_error(error, tk, "expected digit/dash/plus/dot to begin a number");
         return NULL;
     }
 
-    _skip(tk, input, TM_TK_DIGIT);
+    tm_lexer_skip(tk, input, TM_TK_DIGIT);
 
     if (tk->type == TM_TK_DOT) {
         dot_found = 1;
 
-        _eat(tk, input, TM_TK_DOT);
-        _skip(tk, input, TM_TK_DIGIT);
+        tm_lexer_eat(tk, input, TM_TK_DOT);
+        tm_lexer_skip(tk, input, TM_TK_DIGIT);
     }
 
     if (tk->type == TM_TK_CHAR) {
         if (*(tk->value) == 'e' || *(tk->value) == 'E') {
             exp_found = 1;
-            _eat(tk, input, TM_TK_CHAR);
+            tm_lexer_eat(tk, input, TM_TK_CHAR);
 
             if (tk->type == TM_TK_DASH || tk->type == TM_TK_PLUS)
-                tm_parf_lexer(tk, input, 1);
+                tm_lexer_advance(tk, input, 1);
 
-            _skip(tk, input, TM_TK_DIGIT);
+            tm_lexer_skip(tk, input, TM_TK_DIGIT);
         }
     }
 
@@ -340,7 +199,7 @@ tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* 
 
     while (tk->type == TM_TK_CHAR && i < 7) {
         buff[i] = *(tk->value);
-        tm_parf_lexer(tk, input, 1);
+        tm_lexer_advance(tk, input, 1);
         i++;
     }
 
@@ -371,7 +230,7 @@ tm_parf_t* tm_parf_parse_value(tm_parf_token* tk, char* input, tm_parf_error* er
  * @return \p NULL if there was an error, the object (of type \p TM_T_LIST) otherwise
  */
 tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* error) {
-    if (_eat(tk, input, TM_TK_LBRACKET) != 0) {
+    if (tm_lexer_eat(tk, input, TM_TK_LBRACKET) != 0) {
         make_error(error, tk, "expected left bracket to begin list");
         return NULL;
     }
@@ -379,7 +238,7 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
     tm_parf_t* object = tm_parf_list_new();
     tm_parf_t* val;
 
-    _skip(tk, input, TM_TK_WHITESPACE);
+    tm_lexer_skip(tk, input, TM_TK_WHITESPACE);
 
     while (tk->type != TM_TK_RBRACKET && tk->type != TM_TK_EOS) {
         val = tm_parf_parse_value(tk, input, error);
@@ -391,10 +250,10 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
             tm_parf_list_append(object, val);
         }
 
-        _skip(tk, input, TM_TK_WHITESPACE);
+        tm_lexer_skip(tk, input, TM_TK_WHITESPACE);
     }
 
-    if(_eat(tk, input, TM_TK_RBRACKET) != TM_ERR_OK) {
+    if(tm_lexer_eat(tk, input, TM_TK_RBRACKET) != TM_ERR_OK) {
         make_error(error, tk, "expected right bracket to end list");
         tm_parf_delete(object);
         return NULL;
@@ -419,7 +278,7 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
  */
 tm_parf_t *tm_parf_parse_value(tm_parf_token *tk, char *input, tm_parf_error *error) {
 
-    _skip(tk, input, TM_TK_WHITESPACE);
+    tm_lexer_skip(tk, input, TM_TK_WHITESPACE);
 
     tm_parf_t* object = NULL;
 
@@ -482,7 +341,7 @@ char* _parse_name_lit(tm_parf_token* tk, char* input, tm_parf_error* error) {
             tmp = realloc(tmp, fac * mul * sizeof(char));
         }
 
-        tm_parf_lexer(tk, input, 1);
+        tm_lexer_advance(tk, input, 1);
     }
 
     tmp[sz] = '\0';
@@ -504,12 +363,12 @@ char* _parse_name_lit(tm_parf_token* tk, char* input, tm_parf_error* error) {
  * @return \p TM_ERR_OK if everthing went ok, something else otherwise
  */
 int _skip_comment(tm_parf_token *tk, char *input) {
-    if (_eat(tk, input, TM_TK_COMMENT) != TM_ERR_OK) // that is not a comment?!?
+    if (tm_lexer_eat(tk, input, TM_TK_COMMENT) != TM_ERR_OK) // that is not a comment?!?
         return TM_ERR_LEXER_UNEXPECTED_TOKEN;
 
     int r;
     while (tk->type != TM_TK_EOS && *(tk->value) != '\n') {
-        r = tm_parf_lexer(tk, input, 1);
+        r = tm_lexer_advance(tk, input, 1);
         if (r < 0)
             return r;
     }
@@ -538,14 +397,14 @@ tm_parf_t* tm_parf_loads(char* input, tm_parf_error* error) {
     tm_parf_t* obj = tm_parf_object_new();
 
     // bootstrap
-    tm_parf_token_init(&tk, input);
-    _skip(&tk, input, TM_TK_WHITESPACE);
+    tm_lexer_token_init(&tk, input);
+    tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
 
     // read the stuff
     while(tk.type != TM_TK_EOS) {
         if(tk.type == TM_TK_COMMENT) {
             _skip_comment(&tk, input);
-            _skip(&tk, input, TM_TK_WHITESPACE);
+            tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
         }
         else {
             char* key = _parse_name_lit(&tk, input, error);
@@ -554,7 +413,7 @@ tm_parf_t* tm_parf_loads(char* input, tm_parf_error* error) {
                 return NULL;
             }
 
-            _skip(&tk, input, TM_TK_WHITESPACE);
+            tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
 
             tm_parf_t* value = tm_parf_parse_value(&tk, input, error);
             if (value == NULL) {
@@ -567,7 +426,7 @@ tm_parf_t* tm_parf_loads(char* input, tm_parf_error* error) {
             free(key);
         }
 
-        _skip(&tk, input, TM_TK_WHITESPACE);
+        tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
     }
 
     return obj;

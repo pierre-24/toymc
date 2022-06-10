@@ -255,7 +255,7 @@ int tm_simulation_parameters_read(tm_simulation_parameters* p, FILE* f) {
 
     // read file
     fseek(f, 0, SEEK_END);
-    long length = ftell(f);
+    size_t length = ftell(f);
     fseek(f, 0, SEEK_SET);
     char* buffer = malloc((length + 1) * sizeof (char ));
 
