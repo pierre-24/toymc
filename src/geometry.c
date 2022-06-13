@@ -23,13 +23,13 @@ tm_geometry *tm_geometry_new(int N) {
     g->types = NULL;
 
     // fill
-    g->positions = malloc(4 * N * sizeof (float));
+    g->positions = malloc(4 * N * sizeof(double));
     if(g->positions == NULL) {
         tm_geometry_delete(g);
         return NULL;
     }
 
-    g->types = malloc(N * sizeof (int));
+    g->types = malloc(N * sizeof(int));
     if (g->positions == NULL) {
         tm_geometry_delete(g);
         return NULL;

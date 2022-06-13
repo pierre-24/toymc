@@ -11,7 +11,7 @@
  */
 typedef struct tm_geometry_ {
     int N;
-    float* positions;
+    double * positions;
     int* types;
 } tm_geometry;
 
