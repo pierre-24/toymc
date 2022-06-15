@@ -108,8 +108,5 @@ _deps
 *-prefix/
 
 # End of https://www.toptal.com/developers/gitignore/api/cmake,clion+all
-
-tests/*/main.c
-tests/*/*.h
 vendor/
 
