@@ -10,31 +10,13 @@ enum {
 
     // unexpected
     TM_ERR_MALLOC,
-
-    // logic (should not happen)
-    TM_ERR_PARAM_NULL,
-    TM_ERR_API,
-    TM_ERR_OUT_OF_BOUND,
-
-    // file
     TM_ERR_READ,
 
-    // lexer
-    TM_ERR_LEXER_SHIFT,
-    TM_ERR_LEXER_UNEXPECTED_TOKEN,
-
-    // parf
-    TM_ERR_PARF,
-    TM_ERR_PARF_NCHECK,
-    TM_ERR_PARF_KNF,
-    TM_ERR_PARF_UNEXPECTED_TYPE,
-    TM_ERR_PARF_LIST_SIZE,
-
-    // xyz
-    TM_ERR_XYZ_NOT_A_FLOAT,
-    TM_ERR_XYZ_NOT_AN_INT,
-    TM_ERR_XYZ_NOT_ATOM_TYPE,
-    TM_ERR_XYZ_TOO_SHORT,
+    // module
+    TM_ERR_LEXER,
+    TM_ERR_PARAMETER_FILE,
+    TM_ERR_SIMULATION_PARAMETERS,
+    TM_ERR_XYZ,
 
     TM_ERR_LAST
 };
@@ -43,26 +25,12 @@ static char* ERROR_EXPLS[] = {
         "Not an error (OK)",
 
         "malloc() failed",
-
-        "One of the parameter is NULL (SNH)",
-        "Programmer error (SNH)",
-        "Out of bound (SNH)",
-
         "Error while reading file",
 
-        "Inconsistent shift (LEXER)",
-        "Unexpected token (LEXER)",
-
-        "Error in PARF",
-        "Unexpected type (PARF)",
-        "Key not found (PARF)",
-        "Unexpected type (PARF)",
-        "List size problem (PARF)",
-
-        "Not a float (XYZ)",
-        "Not an integer (XYZ)",
-        "Not a valid atom type (XYZ)",
-        "Shorter than expected (XYZ)",
+        "Error in lexer",
+        "Error in parameter file",
+        "Error in simulation parameter",
+        "Error in xyz",
 
         "Not an error (LAST)"
 };
