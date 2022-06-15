@@ -1,6 +1,4 @@
-//
-// Created by pierre on 6/10/22.
-//
+#include <ctype.h>
 
 #include "param_file_parser.h"
 #include "lexer.h"
@@ -79,14 +77,18 @@ int tm_lexer_advance(tm_parf_token *tk, char *input, int shift) {
     char c = input[tk->position + shift];
     tm_parf_token_type t = TM_TK_CHAR;
 
-    int* tr = lexer_translator;
-    while (*tr != -1) {
-        if (c == *tr) {
-            t = *(tr+1);
-            break;
-        }
+    if(isalpha(c))
+        t = TM_TK_ALPHA;
+    else {
+        int *tr = lexer_translator;
+        while (*tr != -1) {
+            if (c == *tr) {
+                t = *(tr + 1);
+                break;
+            }
 
-        tr += 2;
+            tr += 2;
+        }
     }
 
     tk->position += shift;

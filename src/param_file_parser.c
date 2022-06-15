@@ -144,10 +144,10 @@ tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* e
         tm_lexer_skip(tk, input, TM_TK_DIGIT);
     }
 
-    if (tk->type == TM_TK_CHAR) {
+    if (tk->type == TM_TK_ALPHA) {
         if (*(tk->value) == 'e' || *(tk->value) == 'E') {
             exp_found = 1;
-            tm_lexer_eat(tk, input, TM_TK_CHAR);
+            tm_lexer_eat(tk, input, TM_TK_ALPHA);
 
             if (tk->type == TM_TK_DASH || tk->type == TM_TK_PLUS)
                 tm_lexer_advance(tk, input, 1);
@@ -188,7 +188,7 @@ tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* e
  * @return \p NULL if there was an error, the object (of type \p TM_T_BOOLEAN)  otherwise
  */
 tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* error) {
-    if (tk->type != TM_TK_CHAR) {
+    if (tk->type != TM_TK_ALPHA) {
         make_error(error, tk, "expected a character for boolean");
         return NULL;
     }
@@ -197,7 +197,7 @@ tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* 
     int i = 0;
     tm_parf_t* obj = NULL;
 
-    while (tk->type == TM_TK_CHAR && i < 7) {
+    while (tk->type == TM_TK_ALPHA && i < 7) {
         buff[i] = *(tk->value);
         tm_lexer_advance(tk, input, 1);
         i++;
@@ -321,7 +321,7 @@ tm_parf_t *tm_parf_parse_value(tm_parf_token *tk, char *input, tm_parf_error *er
  * @return \p NULL if there was an error, the name otherwise.
  */
 char* _parse_name_lit(tm_parf_token* tk, char* input, tm_parf_error* error) {
-    if (!isalnum(input[tk->position]) && input[tk->position] != '_' && input[tk->position] != '-') {
+    if (!(TM_TK_ALPHA == tk->type || tk->type == TM_TK_DIGIT) && input[tk->position] != '_' && input[tk->position] != '-') {
         make_error(error, tk, "expected alpha or underscore to start the name literal");
         return NULL;
     }
@@ -331,7 +331,7 @@ char* _parse_name_lit(tm_parf_token* tk, char* input, tm_parf_error* error) {
     int fac = 1;
     char* tmp = malloc(fac * mul * sizeof(char));
 
-    while (isalnum(input[tk->position]) || input[tk->position] == '_'  || input[tk->position] == '-') {
+    while (tk->type == TM_TK_ALPHA || tk->type == TM_TK_DIGIT || input[tk->position] == '_'  || input[tk->position] == '-') {
         tmp[sz] = *(tk->value);
         sz++;
 

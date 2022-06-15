@@ -9,6 +9,7 @@ typedef enum tm_parf_token_type_ {
     TM_TK_WHITESPACE, // space (U+0020), horizontal tab (U+0009)
     TM_TK_NL, // linefeed (U+000D), carriage return (U+000A)
     TM_TK_DIGIT, // [0-9]
+    TM_TK_ALPHA, // [a-zA-Z]
     TM_TK_COMMA, // ","
     TM_TK_DOT, // "."
     TM_TK_LBRACKET, // "["

@@ -2,13 +2,13 @@
 #include "lexer.h"
 
 START_TEST(test_lexer) {
-        char* str = "ab[-9]";
+        char* str = "ab[-9]!";
         int l = strlen(str);
         tm_parf_token t;
         _OK(tm_lexer_token_init(&t, str));
 
         tm_parf_token_type tab[] = {
-            TM_TK_CHAR, TM_TK_CHAR, TM_TK_LBRACKET, TM_TK_DASH, TM_TK_DIGIT, TM_TK_RBRACKET, TM_TK_EOS};
+            TM_TK_ALPHA, TM_TK_ALPHA, TM_TK_LBRACKET, TM_TK_DASH, TM_TK_DIGIT, TM_TK_RBRACKET, TM_TK_CHAR, TM_TK_EOS};
 
         for(int i=0; i <= l; i++) {
             ck_assert_int_eq(t.type, tab[i]);

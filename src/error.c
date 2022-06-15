@@ -85,5 +85,5 @@ void tm_print_error_code(char* file, int line, int errcode) {
     if(errcode < 0 || errcode >= TM_ERR_LAST)
         tm_print_error_msg(__FILE__, __LINE__, "errcode %d (thrown from %d:%d) is unknown", errcode, file, line);
     else
-        tm_print_error_msg(file,  line, error_expl[errcode]);
+        tm_print_error_msg(file, line, ERROR_EXPLS[errcode]);
 }

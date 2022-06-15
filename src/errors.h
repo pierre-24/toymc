@@ -33,11 +33,13 @@ enum {
     // xyz
     TM_ERR_XYZ_NOT_A_FLOAT,
     TM_ERR_XYZ_NOT_AN_INT,
+    TM_ERR_XYZ_NOT_ATOM_TYPE,
+    TM_ERR_XYZ_TOO_SHORT,
 
     TM_ERR_LAST
 };
 
-static char* error_expl[] = {
+static char* ERROR_EXPLS[] = {
         "Not an error (OK)",
 
         "malloc() failed",
@@ -59,6 +61,8 @@ static char* error_expl[] = {
 
         "Not a float (XYZ)",
         "Not an integer (XYZ)",
+        "Not a valid atom type (XYZ)",
+        "Shorter than expected (XYZ)",
 
         "Not an error (LAST)"
 };

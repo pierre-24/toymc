@@ -22,15 +22,22 @@ tm_geometry *tm_geometry_new(long N) {
     g->N = N;
     g->positions = NULL;
     g->types = NULL;
+    g->type_vals = NULL;
 
     // fill
-    g->positions = malloc(4 * N * sizeof(double));
+    g->positions = malloc(3 * N * sizeof(double));
     if(g->positions == NULL) {
         tm_geometry_delete(g);
         return NULL;
     }
 
     g->types = malloc(N * sizeof(int));
+    if (g->positions == NULL) {
+        tm_geometry_delete(g);
+        return NULL;
+    }
+
+    g->type_vals = calloc(N, sizeof(char*));
     if (g->positions == NULL) {
         tm_geometry_delete(g);
         return NULL;
@@ -51,7 +58,7 @@ tm_geometry *tm_geometry_new(long N) {
  * @return \p TM_ERR_OK if the atom exists
  * @post \p type and \p position are set
  */
-int tm_geometry_get_atom(tm_geometry *geometry, int n, int *type, float **position) {
+int tm_geometry_get_atom(tm_geometry *geometry, int n, int *type, double **position) {
     if(geometry == NULL || type == NULL || position == NULL)
         return TM_ERR_PARAM_NULL;
 
@@ -78,6 +85,13 @@ int tm_geometry_delete(tm_geometry *geometry) {
 
     if(geometry->positions != NULL)
         free(geometry->positions);
+
+    if(geometry->type_vals != NULL) {
+        for(int i = 0; i < geometry->N && geometry->type_vals[i] != NULL; i++) {
+            free(geometry->type_vals[i]);
+        }
+        free(geometry->type_vals);
+    }
 
     if(geometry->types != NULL)
         free(geometry->types);
