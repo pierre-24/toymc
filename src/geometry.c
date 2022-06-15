@@ -9,7 +9,7 @@
  * @param N number of atoms
  * @return an initialized \p tm_geometry
  */
-tm_geometry *tm_geometry_new(int N) {
+tm_geometry *tm_geometry_new(long N) {
     if(N < 0)
         return NULL;
 
@@ -19,6 +19,7 @@ tm_geometry *tm_geometry_new(int N) {
         return NULL;
 
     // assign
+    g->N = N;
     g->positions = NULL;
     g->types = NULL;
 

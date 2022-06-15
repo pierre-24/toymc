@@ -10,12 +10,12 @@
  * \endcode
  */
 typedef struct tm_geometry_ {
-    int N;
+    long N;
     double * positions;
     int* types;
 } tm_geometry;
 
-tm_geometry *tm_geometry_new(int N);
+tm_geometry *tm_geometry_new(long N);
 int tm_geometry_get_atom(tm_geometry* geometry, int n, int* type, float* position[3]);
 int tm_geometry_delete(tm_geometry* geometry);
 

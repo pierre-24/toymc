@@ -31,34 +31,47 @@ set(CHECK_EXTRA_LIBS m subunit rt pthread)
 # -- test_param_file
 add_unit_test(
         NAME tests_param_file
-        SOURCES tests_param_file_objects.c
+        SOURCES tests_param_file_objects/main.c
         LIBS toymc ${CHECK_LIBRARIES} ${CHECK_EXTRA_LIBS}
 )
 
 # -- tests_lexer
 add_unit_test(
         NAME tests_lexer
-        SOURCES tests_lexer.c
+        SOURCES tests_lexer/main.c
         LIBS toymc ${CHECK_LIBRARIES} ${CHECK_EXTRA_LIBS}
 )
 
 # -- test_param_file_parser
 add_unit_test(
         NAME tests_param_file_parser
-        SOURCES tests_param_file_parser.c
+        SOURCES tests_param_file_parser/main.c
         LIBS toymc ${CHECK_LIBRARIES} ${CHECK_EXTRA_LIBS}
 )
 
 # -- test_simulation_parameters
 configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_dummy_input.inp
+        tests_simulation_parameters/test_dummy_input.inp
         ${PROJECT_BINARY_DIR}/rundir/test/test_dummy_input.inp
         COPYONLY
 )
 
 add_unit_test(
         NAME tests_simulation_parameters
-        SOURCES tests_simulation_parameters.c
+        SOURCES tests_simulation_parameters/main.c
+        LIBS toymc ${CHECK_LIBRARIES} ${CHECK_EXTRA_LIBS}
+)
+
+# -- test_xyz_parser
+configure_file(
+        tests_xyz_parser/test_dummy_geom.xyz
+        ${PROJECT_BINARY_DIR}/rundir/test/test_dummy_geom.xyz
+        COPYONLY
+)
+
+add_unit_test(
+        NAME tests_xyz_parser
+        SOURCES tests_xyz_parser/main.c
         LIBS toymc ${CHECK_LIBRARIES} ${CHECK_EXTRA_LIBS}
 )
 

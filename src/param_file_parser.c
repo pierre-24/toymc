@@ -238,7 +238,7 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
     tm_parf_t* object = tm_parf_list_new();
     tm_parf_t* val;
 
-    tm_lexer_skip(tk, input, TM_TK_WHITESPACE);
+    tm_lexer_skip_whitespace_and_nl(tk, input);
 
     while (tk->type != TM_TK_RBRACKET && tk->type != TM_TK_EOS) {
         val = tm_parf_parse_value(tk, input, error);
@@ -250,7 +250,7 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
             tm_parf_list_append(object, val);
         }
 
-        tm_lexer_skip(tk, input, TM_TK_WHITESPACE);
+        tm_lexer_skip_whitespace_and_nl(tk, input);
     }
 
     if(tm_lexer_eat(tk, input, TM_TK_RBRACKET) != TM_ERR_OK) {
@@ -277,8 +277,7 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
  * @return \p NULL if there was an error, the object (of correct type) otherwise
  */
 tm_parf_t *tm_parf_parse_value(tm_parf_token *tk, char *input, tm_parf_error *error) {
-
-    tm_lexer_skip(tk, input, TM_TK_WHITESPACE);
+    tm_lexer_skip_whitespace_and_nl(tk, input);
 
     tm_parf_t* object = NULL;
 
@@ -367,7 +366,7 @@ int _skip_comment(tm_parf_token *tk, char *input) {
         return TM_ERR_LEXER_UNEXPECTED_TOKEN;
 
     int r;
-    while (tk->type != TM_TK_EOS && *(tk->value) != '\n') {
+    while (tk->type != TM_TK_EOS && tk->type != TM_TK_NL) {
         r = tm_lexer_advance(tk, input, 1);
         if (r < 0)
             return r;
@@ -398,13 +397,13 @@ tm_parf_t* tm_parf_loads(char* input, tm_parf_error* error) {
 
     // bootstrap
     tm_lexer_token_init(&tk, input);
-    tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
+    tm_lexer_skip_whitespace_and_nl(&tk, input);
 
     // read the stuff
     while(tk.type != TM_TK_EOS) {
         if(tk.type == TM_TK_COMMENT) {
             _skip_comment(&tk, input);
-            tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
+            tm_lexer_skip_whitespace_and_nl(&tk, input);
         }
         else {
             char* key = _parse_name_lit(&tk, input, error);
@@ -413,7 +412,7 @@ tm_parf_t* tm_parf_loads(char* input, tm_parf_error* error) {
                 return NULL;
             }
 
-            tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
+            tm_lexer_skip_whitespace_and_nl(&tk, input);
 
             tm_parf_t* value = tm_parf_parse_value(&tk, input, error);
             if (value == NULL) {
@@ -426,7 +425,7 @@ tm_parf_t* tm_parf_loads(char* input, tm_parf_error* error) {
             free(key);
         }
 
-        tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
+        tm_lexer_skip_whitespace_and_nl(&tk, input);
     }
 
     return obj;

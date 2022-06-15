@@ -6,7 +6,8 @@
 #define TOYMC_LEXER_H
 
 typedef enum tm_parf_token_type_ {
-    TM_TK_WHITESPACE, // space (U+0020), linefeed (U+000D), carriage return (U+000A), horizontal tab (U+0009)
+    TM_TK_WHITESPACE, // space (U+0020), horizontal tab (U+0009)
+    TM_TK_NL, // linefeed (U+000D), carriage return (U+000A)
     TM_TK_DIGIT, // [0-9]
     TM_TK_COMMA, // ","
     TM_TK_DOT, // "."
@@ -48,5 +49,6 @@ int tm_lexer_token_init(tm_parf_token* tk, char* input);
 int tm_lexer_advance(tm_parf_token *tk, char *input, int shift);
 int tm_lexer_eat(tm_parf_token *tk, char *input, tm_parf_token_type t);
 int tm_lexer_skip(tm_parf_token *tk, char *input, tm_parf_token_type t);
+int tm_lexer_skip_whitespace_and_nl(tm_parf_token *tk, char *input);
 
 #endif //TOYMC_LEXER_H

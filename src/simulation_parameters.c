@@ -1,4 +1,5 @@
 #include "simulation_parameters.h"
+#include "files.h"
 
 /**
  * Create a \p tm_simulation_parameters structure and sets default parameters
@@ -255,21 +256,11 @@ int tm_simulation_parameters_read(tm_simulation_parameters* p, FILE* f) {
     if(p == NULL || f == NULL)
         return TM_ERR_PARAM_NULL;
 
-    // read file
-    fseek(f, 0, SEEK_END);
-    size_t length = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    char* buffer = malloc((length + 1) * sizeof (char ));
-
-    if(buffer == NULL)
-        return TM_ERR_MALLOC;
-
-    if(fread(buffer, 1, length, f) != length) {
-        free(buffer);
-        return TM_ERR_READ;
+    char* buffer;
+    int r = tm_read_file(f, &buffer);
+    if(r != TM_ERR_OK) {
+        return r;
     }
-
-    buffer[length] = '\0';
 
     // getting object
     tm_parf_error e;
@@ -281,7 +272,7 @@ int tm_simulation_parameters_read(tm_simulation_parameters* p, FILE* f) {
         return TM_ERR_PARF;
     }
 
-    int r = tm_simulation_parameter_fill(p, obj);
+    r = tm_simulation_parameter_fill(p, obj);
     tm_parf_delete(obj);
     return r;
 

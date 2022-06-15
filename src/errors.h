@@ -30,6 +30,10 @@ enum {
     TM_ERR_PARF_UNEXPECTED_TYPE,
     TM_ERR_PARF_LIST_SIZE,
 
+    // xyz
+    TM_ERR_XYZ_NOT_A_FLOAT,
+    TM_ERR_XYZ_NOT_AN_INT,
+
     TM_ERR_LAST
 };
 
@@ -52,6 +56,9 @@ static char* error_expl[] = {
         "Key not found (PARF)",
         "Unexpected type (PARF)",
         "List size problem (PARF)",
+
+        "Not a float (XYZ)",
+        "Not an integer (XYZ)",
 
         "Not an error (LAST)"
 };

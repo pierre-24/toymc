@@ -7,8 +7,8 @@
 
 int lexer_translator[] = {
         0x20, TM_TK_WHITESPACE,
-        0x0d, TM_TK_WHITESPACE,
-        0x0a, TM_TK_WHITESPACE,
+        0x0d, TM_TK_NL,
+        0x0a, TM_TK_NL,
         0x09, TM_TK_WHITESPACE,
         '0',  TM_TK_DIGIT,
         '1',  TM_TK_DIGIT,
@@ -138,6 +138,30 @@ int tm_lexer_skip(tm_parf_token *tk, char *input, tm_parf_token_type t) {
     int r;
 
     while (tk->type == t) {
+        r = tm_lexer_advance(tk, input, 1);
+        if (r != TM_ERR_OK)
+            return r;
+    }
+
+    return TM_ERR_OK;
+}
+
+/**
+ * Skip \p TM_TK_NL and \p TM_TK_WHITESPACE
+ * @pre \code{.c}
+ * tk != NULL && input != NULL
+ * && 0 <= tk->position < strlen(input)
+ * \endcode
+ * @param tk valid token
+ * @param input input string
+ * @param t type
+ * @post the token is of type \p t
+ * @return \p TM_ERR_OK if token was of type \p t, something else otherwise
+ */
+int tm_lexer_skip_whitespace_and_nl(tm_parf_token *tk, char *input) {
+    int r;
+
+    while (tk->type == TM_TK_WHITESPACE || tk->type == TM_TK_NL) {
         r = tm_lexer_advance(tk, input, 1);
         if (r != TM_ERR_OK)
             return r;

@@ -3,7 +3,7 @@ set(LIB_SOURCES
         param_file_parser.c
         simulation_parameters.c
         pcg32.c
-        lexer.c error.c geometry.c)
+        lexer.c error.c geometry.c xyz_parser.c files.c files.h)
 
 set(PROG_SOURCES
         main.c)
