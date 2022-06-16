@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "geometry.h"
 #include "errors.h"
@@ -55,15 +56,12 @@ tm_geometry *tm_geometry_new(long N) {
  * @param n the number of the atom
  * @param type (output) type of the atom
  * @param position (output) position of the atom
- * @return \p TM_ERR_OK if the atom exists
  * @post \p type and \p position are set
+ * @return \p TM_ERR_OK
  */
 int tm_geometry_get_atom(tm_geometry *geometry, int n, int *type, double **position) {
-    if(geometry == NULL || type == NULL || position == NULL)
-        return TM_ERR_PARAM_NULL;
-
-    if(n < 0 || n >= geometry->N)
-        return TM_ERR_OUT_OF_BOUND;
+    assert(geometry != NULL && type != NULL && position != NULL);
+    assert(n >= 0 && n < geometry->N);
 
     *type = geometry->types[n];
     (*position)[0] = geometry->positions[0 * geometry->N * n];
@@ -77,11 +75,10 @@ int tm_geometry_get_atom(tm_geometry *geometry, int n, int *type, double **posit
  * Delete \p geometry.
  * @pre \code{.c} geometry != NULL \endcode
  * @param geometry the geometry to delete
- * @return \p TM_ERR_OK if the object was delete, something else otherwise
+ * @return \p TM_ERR_OK
  */
 int tm_geometry_delete(tm_geometry *geometry) {
-    if(geometry == NULL)
-        return TM_ERR_PARAM_NULL;
+    assert(geometry != NULL);
 
     if(geometry->positions != NULL)
         free(geometry->positions);

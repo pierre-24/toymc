@@ -2,6 +2,7 @@
 #include "errors.h"
 
 #include <stdlib.h>
+#include <assert.h>
 
 /**
  * Read the whole file in one shot.
@@ -11,8 +12,7 @@
  * @return  \p TM_ERR_OK if everything was ok, something else otherwise.
  */
 int tm_read_file(FILE *f, char **buffer) {
-    if(buffer == NULL || f == NULL)
-        return TM_ERR_PARAM_NULL;
+    assert(f != NULL && buffer != NULL);
 
     // get size
     fseek(f, 0, SEEK_END);
