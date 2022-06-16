@@ -11,6 +11,7 @@ enum {
     // unexpected
     TM_ERR_MALLOC,
     TM_ERR_READ,
+    TM_ERR_NOT_FOUND,
 
     // module
     TM_ERR_LEXER,
@@ -26,6 +27,7 @@ static char* ERROR_EXPLS[] = {
 
         "malloc() failed",
         "Error while reading file",
+        "Not found",
 
         "Error in lexer",
         "Error in parameter file",
