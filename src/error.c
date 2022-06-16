@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include <assert.h>
 
 #include "errors.h"
 
@@ -12,7 +13,7 @@ void tm_set_debug_level(int level) {
 /**
  * Print a debug message in \p stdout, if \p DEBUG_LVL is above 0.
  * @pre \code{.c}
- * file != NULL && line >= 0
+ * file != NULL && format != NULL
  * \endcode
  * @param file source file (use \p __FILE__ )
  * @param line line (use \p __LINE__)
@@ -20,6 +21,8 @@ void tm_set_debug_level(int level) {
  * @param ... extra parameters
  */
 void tm_print_debug_msg(char *file, int line, char *format, ...) {
+    assert(file != NULL && format != NULL);
+
     if(DEBUG_LVL < 1)
         return;
 
@@ -35,7 +38,7 @@ void tm_print_debug_msg(char *file, int line, char *format, ...) {
 /**
  * Print a warning message in \p stdout.
  * @pre \code{.c}
- * file != NULL && line >= 0
+ * file != NULL && format != NULL
  * \endcode
  * @param file source file (use \p __FILE__ )
  * @param line line (use \p __LINE__)
@@ -43,6 +46,8 @@ void tm_print_debug_msg(char *file, int line, char *format, ...) {
  * @param ... extra parameters
  */
 void tm_print_warning_msg(char *file, int line, char *format, ...) {
+    assert(file != NULL && format != NULL);
+
     va_list arglist;
 
     printf("WARNING (%s:%d) :: ", file, line);
@@ -55,7 +60,7 @@ void tm_print_warning_msg(char *file, int line, char *format, ...) {
 /**
  * Print an error message in \p stderr.
  * @pre \code{.c}
- * file != NULL && line >= 0
+ * file != NULL && format != NULL
  * \endcode
  * @param file source file (use \p __FILE__ )
  * @param line line (use \p __LINE__)
@@ -63,6 +68,8 @@ void tm_print_warning_msg(char *file, int line, char *format, ...) {
  * @param ... extra parameters
  */
 void tm_print_error_msg(char *file, int line, char *format, ...) {
+    assert(file != NULL && format != NULL);
+
     va_list arglist;
 
     fprintf(stderr, "ERROR (%s:%d) :: ", file, line);
@@ -75,13 +82,15 @@ void tm_print_error_msg(char *file, int line, char *format, ...) {
 /**
  * Print an error message in \p stderr, from a valid \p errcode
  * @pre \code{.c}
- * file != NULL && line >= 0 && 0 <= errcode < TM_ERR_LAST
+ * file != NULL
  * \endcode
  * @param file source file (use \p __FILE__ )
  * @param line line (use \p __LINE__)
  * @param errcode the (valid) error code
  */
 void tm_print_error_code(char* file, int line, int errcode) {
+    assert(file != NULL);
+
     if(errcode < 0 || errcode >= TM_ERR_LAST)
         tm_print_error_msg(__FILE__, __LINE__, "errcode %d (thrown from %d:%d) is unknown", errcode, file, line);
     else

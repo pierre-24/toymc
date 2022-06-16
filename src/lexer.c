@@ -1,13 +1,14 @@
 #include <ctype.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include "param_file_parser.h"
 #include "lexer.h"
 
 int lexer_translator[] = {
         0x20, TM_TK_WHITESPACE,
+        0x0a, TM_TK_CR,
         0x0d, TM_TK_NL,
-        0x0a, TM_TK_NL,
         0x09, TM_TK_WHITESPACE,
         '0',  TM_TK_DIGIT,
         '1',  TM_TK_DIGIT,
@@ -92,7 +93,7 @@ int tm_lexer_advance(tm_parf_token *tk, char *input, int shift) {
     tk->type = t;
     tk->value = input + tk->position;
 
-    if(*(tk->value) == '\n') {
+    if(tk->type == TM_TK_NL) {
         tk->line += 1;
         tk->pos_in_line = 0;
     } else {
@@ -164,4 +165,28 @@ int tm_lexer_skip_whitespace_and_nl(tm_parf_token *tk, char *input) {
     }
 
     return TM_ERR_OK;
+}
+
+/**
+ * Print an error message in \p stderr, but including the current token.
+ * @pre \code{.c}
+ * file != NULL && line >= 0
+ * \endcode
+ * @param file source file (use \p __FILE__ )
+ * @param line line (use \p __LINE__)
+ * @param tk A valid token
+ * @param format format of the string
+ * @param ... extra parameters
+ */
+void tm_print_error_msg_with_token(char *file, int line, tm_parf_token* tk, char *format, ...) {
+    assert(file != NULL && tk != NULL && format != NULL);
+
+    va_list arglist;
+
+    fprintf(stderr, "ERROR (%s:%d) :: ", file, line);
+    fprintf(stderr, "Token `%c` (file:%d:%d) :: ", *(tk->value), tk->line, tk->pos_in_line);
+    va_start(arglist, format);
+    vfprintf(stderr, format, arglist);
+    va_end(arglist);
+    fprintf(stderr, "\n");
 }

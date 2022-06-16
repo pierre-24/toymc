@@ -7,7 +7,8 @@
 
 typedef enum tm_parf_token_type_ {
     TM_TK_WHITESPACE, // space (U+0020), horizontal tab (U+0009)
-    TM_TK_NL, // linefeed (U+000D), carriage return (U+000A)
+    TM_TK_NL, // linefeed (\n, U+000D)
+    TM_TK_CR, // carriage return (\r, U+000A)
     TM_TK_DIGIT, // [0-9]
     TM_TK_ALPHA, // [a-zA-Z]
     TM_TK_COMMA, // ","
@@ -30,7 +31,7 @@ typedef enum tm_parf_token_type_ {
 /**
  * @brief Token used by the Lexer. Serve as placeholder of the position.
  * Fields are \code{.c}
- * char* value; // pointer to the char in the string (aka &input[position])
+ * char* value; // pointer to the char in the string (aka `&(input[position])`)
  * tm_parf_token_type type; // type of the token
  * int position; // position in the string
  * int line; // the line (one-based)
@@ -51,5 +52,7 @@ int tm_lexer_advance(tm_parf_token *tk, char *input, int shift);
 int tm_lexer_eat(tm_parf_token *tk, char *input, tm_parf_token_type t);
 int tm_lexer_skip(tm_parf_token *tk, char *input, tm_parf_token_type t);
 int tm_lexer_skip_whitespace_and_nl(tm_parf_token *tk, char *input);
+
+void tm_print_error_msg_with_token(char *file, int line, tm_parf_token* tk, char *format, ...);
 
 #endif //TOYMC_LEXER_H
