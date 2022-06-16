@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <assert.h>
 
 #include "param_file_parser.h"
 #include "lexer.h"
@@ -36,15 +37,14 @@ int lexer_translator[] = {
  * Initialize the token \p tk with the first character of \p input.
  * @pre \code{.c}
  * tk != NULL && input != NULL
- * && strlen(input) >= 1
+ * && strlen(input) >= 0 // not checked
  * \endcode
  * @param tk the token
  * @post \p tk is initialized.
  * @return \p TM_ERR_OK if everything went well, something else otherwise
  */
 int tm_lexer_token_init(tm_parf_token* tk, char* input) {
-    if(tk == NULL)
-        return TM_ERR_PARAM_NULL;
+    assert(tk != NULL && input != NULL);
 
     tk->position = 0;
     tk->line = 1;
@@ -56,23 +56,20 @@ int tm_lexer_token_init(tm_parf_token* tk, char* input) {
 /**
  * Set the token according to the character at \p position
  * @pre \code{.c}
- * tk != NULL && input != NULL
- * && 0 <= tk->position + shift < strlen(input)
+ * tk != NULL && input != NULL && (shift == 0 || shift == 1)
+ * && 0 <= tk->position + shift < strlen(input) // not checked
  * \endcode
  * @param tk token object
  * @param input input string
  * @param shift shift with respect to the current position (should be 0 or 1)
- * @return \p TM_ERR_OK if everything went well, something else otherwise
+ * @return \p TM_ERR_OK
  */
 int tm_lexer_advance(tm_parf_token *tk, char *input, int shift) {
-    if (tk == NULL || input == NULL)
-        return TM_ERR_PARAM_NULL;
+    assert(tk != NULL && input != NULL);
+    assert(shift == 0 || shift == 1);
 
-    if (shift > 1 || shift < 0)
-        return TM_ERR_LEXER_SHIFT;
-
-    if (tk->position + shift < 0)
-        return TM_ERR_LEXER_SHIFT;
+    if (tk->type == TM_TK_EOS)
+        return TM_ERR_OK;
 
     char c = input[tk->position + shift];
     tm_parf_token_type t = TM_TK_CHAR;
@@ -109,7 +106,7 @@ int tm_lexer_advance(tm_parf_token *tk, char *input, int shift) {
  * Advance to the next token if the current one if of type \p t
  * @pre \code{.c}
  * tk != NULL && input != NULL
- * && 0 <= tk->position < strlen(input)
+ * && 0 <= tk->position < strlen(input) // not checked
  * \endcode
  * @param tk valid token
  * @param input input string
@@ -118,8 +115,10 @@ int tm_lexer_advance(tm_parf_token *tk, char *input, int shift) {
  * @return \p TM_ERR_OK if token was of type \p t, something else otherwise
  */
 int tm_lexer_eat(tm_parf_token *tk, char *input, tm_parf_token_type t) {
+    assert(tk != NULL && input != NULL);
+
     if (tk->type != t)
-        return TM_ERR_LEXER_UNEXPECTED_TOKEN;
+        return TM_ERR_LEXER;
 
     return tm_lexer_advance(tk, input, 1);
 }
@@ -128,7 +127,7 @@ int tm_lexer_eat(tm_parf_token *tk, char *input, tm_parf_token_type t) {
  * Advance to the next token until one is of type \p t.
  * @pre \code{.c}
  * tk != NULL && input != NULL
- * && 0 <= tk->position < strlen(input)
+ * && 0 <= tk->position < strlen(input) // not checked
  * \endcode
  * @param tk valid token
  * @param input input string
@@ -137,13 +136,10 @@ int tm_lexer_eat(tm_parf_token *tk, char *input, tm_parf_token_type t) {
  * @return \p TM_ERR_OK if token was of type \p t, something else otherwise
  */
 int tm_lexer_skip(tm_parf_token *tk, char *input, tm_parf_token_type t) {
-    int r;
+    assert(tk != NULL && input != NULL);
 
-    while (tk->type == t) {
-        r = tm_lexer_advance(tk, input, 1);
-        if (r != TM_ERR_OK)
-            return r;
-    }
+    while (tk->type == t)
+        tm_lexer_advance(tk, input, 1);
 
     return TM_ERR_OK;
 }
@@ -152,7 +148,7 @@ int tm_lexer_skip(tm_parf_token *tk, char *input, tm_parf_token_type t) {
  * Skip \p TM_TK_NL and \p TM_TK_WHITESPACE
  * @pre \code{.c}
  * tk != NULL && input != NULL
- * && 0 <= tk->position < strlen(input)
+ * && 0 <= tk->position < strlen(input) // not checked
  * \endcode
  * @param tk valid token
  * @param input input string
@@ -161,12 +157,10 @@ int tm_lexer_skip(tm_parf_token *tk, char *input, tm_parf_token_type t) {
  * @return \p TM_ERR_OK if token was of type \p t, something else otherwise
  */
 int tm_lexer_skip_whitespace_and_nl(tm_parf_token *tk, char *input) {
-    int r;
+    assert(tk != NULL && input != NULL);
 
     while (tk->type == TM_TK_WHITESPACE || tk->type == TM_TK_NL) {
-        r = tm_lexer_advance(tk, input, 1);
-        if (r != TM_ERR_OK)
-            return r;
+        tm_lexer_advance(tk, input, 1);
     }
 
     return TM_ERR_OK;
