@@ -3,31 +3,31 @@
 #include "lexer.h"
 
 int tm_lexer_advance(tm_parf_token *tk, char *input, int shift);
-tm_parf_t* tm_parf_parse_string(tm_parf_token* tk, char* input, tm_parf_error* error);
-tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* error);
-tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* error);
-tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* error);
+tm_parf_t *tm_parf_parse_string(tm_parf_token *tk, char *input);
+tm_parf_t *tm_parf_parse_number(tm_parf_token *tk, char *input);
+tm_parf_t *tm_parf_parse_boolean(tm_parf_token *tk, char *input);
+tm_parf_t *tm_parf_parse_list(tm_parf_token *tk, char *input);
 
 tm_parf_error e;
 
 tm_parf_t *parse_string(tm_parf_token *t, char *input) {
     _OK(tm_lexer_token_init(t, input));
-    return tm_parf_parse_string(t, input, &e);
+    return tm_parf_parse_string(t, input);
 }
 
 tm_parf_t *parse_number(tm_parf_token *t, char *input) {
     _OK(tm_lexer_token_init(t, input));
-    return tm_parf_parse_number(t, input, &e);
+    return tm_parf_parse_number(t, input);
 }
 
 tm_parf_t *parse_boolean(tm_parf_token *t, char *input) {
     _OK(tm_lexer_token_init(t, input));
-    return tm_parf_parse_boolean(t, input, &e);
+    return tm_parf_parse_boolean(t, input);
 }
 
 tm_parf_t *parse_list(tm_parf_token *t, char *input) {
     _OK(tm_lexer_token_init(t, input));
-    return tm_parf_parse_list(t, input, &e);
+    return tm_parf_parse_list(t, input);
 }
 
 START_TEST(test_parser_string) {
@@ -216,7 +216,7 @@ START_TEST(test_parser_object) {
 
     sprintf(tmp, "%s %d %s %d # comment\n%s %d", key[0], value[0], key[1], value[1], key[2], value[2]);
 
-    tm_parf_t* obj_object = tm_parf_loads(tmp, &e);
+    tm_parf_t* obj_object = tm_parf_loads(tmp);
     tm_parf_t* elmt;
 
     tm_parf_iterator * it = tm_parf_iterator_new(obj_object);
@@ -247,7 +247,7 @@ START_TEST(test_parser_object) {
 
     int sz = sizeof(wrong_examples) / sizeof(*wrong_examples);
     for(i=0; i < sz; i++) {
-        ck_assert_ptr_null(tm_parf_loads(wrong_examples[i], &e));
+        ck_assert_ptr_null(tm_parf_loads(wrong_examples[i]));
     }
 }
 END_TEST

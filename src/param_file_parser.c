@@ -1,39 +1,24 @@
 #include "param_file_parser.h"
 #include <ctype.h>
-
-/**
- * Fill the error
- * @pre \code{.c}
- * e != NULL && tk != NULL && what != NULL
- * \endcode
- * @param e error
- * @param tk token
- * @param what error description
- * @post \p e is filled with the correct information
- */
-void make_error(tm_parf_error* e, tm_parf_token* tk, char* what) {
-    e->what = what;
-    e->position = tk->position;
-    e->line = tk->line;
-    e->pos_in_line = tk->pos_in_line;
-}
+#include <assert.h>
 
 /**
  * Parse a string. Caller \b must free it.
  * @pre \code{.c}
- * tk != NULL && input != NULL && error != NULL
+ * tk != NULL && input != NULL
  * && 0 <= tk->position < strlen(input)
+ * && tk->type == TM_TK_QUOTE
  * \endcode
  * @param tk valid token
  * @param input input string
  * @param error error, if any
  * @return \p NULL if it was not able to read the string, a pointer to the string otherwise
  */
-char* _parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
-    if (tm_lexer_eat(tk, input, TM_TK_QUOTE) != TM_ERR_OK) {
-        make_error(error, tk, "expected quote at beginning of string");
-        return NULL;
-    }
+char *_parse_string(tm_parf_token *tk, char *input) {
+    assert(tk != NULL && input != NULL);
+    assert(tk->type == TM_TK_QUOTE);
+
+    tm_lexer_eat(tk, input, TM_TK_QUOTE);
 
     int sz = 0;
     int mul = 64;
@@ -48,7 +33,7 @@ char* _parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
     while (tk->type != TM_TK_QUOTE || (escape && tk->type == TM_TK_QUOTE)) {
         if (tk->type == TM_TK_EOS) {
             free(tmp);
-            make_error(error, tk, "got EOS while getting string");
+            tm_print_error_msg_with_token(__FILE__, __LINE__, tk, "got EOS while reading string");
             return NULL;
         }
 
@@ -69,12 +54,6 @@ char* _parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
         tm_lexer_advance(tk, input, 1);
     }
 
-    if (tm_lexer_eat(tk, input, TM_TK_QUOTE) != TM_ERR_OK) {
-        make_error(error, tk, "expected quote to end string");
-        free(tmp);
-        return NULL;
-    }
-
     tmp[sz] = '\0';
     return tmp;
 }
@@ -82,7 +61,7 @@ char* _parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
 /**
  * Parse a string: \code string := QUOTE (NOT_QUOTE | BACKSLASH QUOTE)* QUOTE; \endcode
  * @pre \code{.c}
- * tk != NULL && input != NULL && error != NULL
+ * tk != NULL && input != NULL
  * && 0 <= tk->position < strlen(input)
  * \endcode
  * @param tk valid token
@@ -90,10 +69,11 @@ char* _parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
  * @param error error, if any
  * @return \p NULL if there was an error, the object (of type \p TM_T_STRING)  otherwise
  */
-tm_parf_t* tm_parf_parse_string(tm_parf_token* tk, char* input, tm_parf_error* error) {
+tm_parf_t *tm_parf_parse_string(tm_parf_token *tk, char *input) {
+    assert(tk != NULL && input != NULL);
     tm_parf_t* object = NULL;
 
-    char* tmp = _parse_string(tk, input, error);
+    char* tmp = _parse_string(tk, input);
 
     if (tmp != NULL) {
         object = tm_parf_string_new(tmp);
@@ -112,28 +92,26 @@ tm_parf_t* tm_parf_parse_string(tm_parf_token* tk, char* input, tm_parf_error* e
  * \endcode
  * In the end, \p strtol and \p strtod are used to parse the number.
  * @pre \code{.c}
- * tk != NULL && input != NULL && error != NULL
+ * tk != NULL && input != NULL
  * && 0 <= tk->position < strlen(input)
+ * && (tk->type == TM_TK_DIGIT || tk->type == TM_TK_DASH || tk->type == TM_TK_PLUS || tk->type == TM_TK_DOT)
  * \endcode
  * @param tk valid token
  * @param input input string
  * @param error error, if any
  * @return \p NULL if there was an error, the object (of type \p TM_T_REAL or \p TM_T_INTEGER) otherwise
  */
-tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* error) {
+tm_parf_t *tm_parf_parse_number(tm_parf_token *tk, char *input) {
+    assert(tk != NULL && input != NULL);
+    assert(tk->type == TM_TK_DIGIT || tk->type == TM_TK_DASH || tk->type == TM_TK_PLUS || tk->type == TM_TK_DOT);
+
     char* beg = tk->value;
     int beg_pos = tk->position;
 
     int dot_found = tk->type == TM_TK_DOT;
     int exp_found = 0;
 
-    if (tm_lexer_eat(tk, input, TM_TK_DIGIT) != TM_ERR_OK
-        && tm_lexer_eat(tk, input, TM_TK_DASH) != TM_ERR_OK
-        && tm_lexer_eat(tk, input, TM_TK_PLUS) != TM_ERR_OK
-        && tm_lexer_eat(tk, input, TM_TK_DOT) != TM_ERR_OK) {
-        make_error(error, tk, "expected digit/dash/plus/dot to begin a number");
-        return NULL;
-    }
+    tm_lexer_advance(tk, input, 1);
 
     tm_lexer_skip(tk, input, TM_TK_DIGIT);
 
@@ -166,7 +144,7 @@ tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* e
 
     if ((int) (end-beg) != tk->position - beg_pos) {
         tm_parf_delete(obj);
-        make_error(error, tk, "error while parsing number");
+        tm_print_error_msg_with_token(__FILE__, __LINE__, tk, "unknown number");
         return NULL;
     }
 
@@ -179,19 +157,18 @@ tm_parf_t* tm_parf_parse_number(tm_parf_token* tk, char* input, tm_parf_error* e
  * BOOLEAN := "true" | "false" | "yes" | "no";
  * \endcode
  * @pre \code{.c}
- * tk != NULL && input != NULL && error != NULL
+ * tk != NULL && input != NULL
  * && 0 <= tk->position < strlen(input)
+ * && tk->type == TM_TK_ALPHA
  * \endcode
  * @param tk valid token
  * @param input input string
  * @param error error, if any
  * @return \p NULL if there was an error, the object (of type \p TM_T_BOOLEAN)  otherwise
  */
-tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* error) {
-    if (tk->type != TM_TK_ALPHA) {
-        make_error(error, tk, "expected a character for boolean");
-        return NULL;
-    }
+tm_parf_t *tm_parf_parse_boolean(tm_parf_token *tk, char *input) {
+    assert(tk != NULL && input != NULL);
+    assert(tk->type == TM_TK_ALPHA);
 
     char buff[8];
     int i = 0;
@@ -213,7 +190,7 @@ tm_parf_t* tm_parf_parse_boolean(tm_parf_token* tk, char* input, tm_parf_error* 
     return obj;
 }
 
-tm_parf_t* tm_parf_parse_value(tm_parf_token* tk, char* input, tm_parf_error* error); // forward decl
+tm_parf_t* tm_parf_parse_value(tm_parf_token* tk, char* input); // forward decl
 
 /**
  * Parse a list
@@ -221,19 +198,18 @@ tm_parf_t* tm_parf_parse_value(tm_parf_token* tk, char* input, tm_parf_error* er
  * LIST := LBRACKET (VALUE (COMMA VALUE)*)? RBRACKET;
  * \endcode
  * @pre \code{.c}
- * tk != NULL && input != NULL && error != NULL
+ * tk != NULL && input != NULL
  * && 0 <= tk->position < strlen(input)
+ * && tk->type == TM_TK_LBRACKET
  * \endcode
  * @param tk valid token
  * @param input input string
  * @param error error, if any
  * @return \p NULL if there was an error, the object (of type \p TM_T_LIST) otherwise
  */
-tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* error) {
-    if (tm_lexer_eat(tk, input, TM_TK_LBRACKET) != 0) {
-        make_error(error, tk, "expected left bracket to begin list");
-        return NULL;
-    }
+tm_parf_t *tm_parf_parse_list(tm_parf_token *tk, char *input) {
+    assert(tk != NULL && input != NULL);
+    assert(tk->type == TM_TK_LBRACKET);
 
     tm_parf_t* object = tm_parf_list_new();
     tm_parf_t* val;
@@ -241,7 +217,7 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
     tm_lexer_skip_whitespace_and_nl(tk, input);
 
     while (tk->type != TM_TK_RBRACKET && tk->type != TM_TK_EOS) {
-        val = tm_parf_parse_value(tk, input, error);
+        val = tm_parf_parse_value(tk, input);
 
         if (val == NULL) {
             tm_parf_delete(object);
@@ -254,7 +230,7 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
     }
 
     if(tm_lexer_eat(tk, input, TM_TK_RBRACKET) != TM_ERR_OK) {
-        make_error(error, tk, "expected right bracket to end list");
+        tm_print_error_msg_with_token(__FILE__, __LINE__, tk, "expected RBRACKET to end STRING");
         tm_parf_delete(object);
         return NULL;
     }
@@ -268,7 +244,7 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
  * VALUE := INTEGER | FLOAT | BOOLEAN | STRING | LIST;
  * \endcode
  * @pre \code{.c}
- * tk != NULL && input != NULL && error != NULL
+ * tk != NULL && input != NULL
  * && 0 <= tk->position < strlen(input)
  * \endcode
  * @param tk valid token
@@ -276,29 +252,31 @@ tm_parf_t* tm_parf_parse_list(tm_parf_token* tk, char* input, tm_parf_error* err
  * @param error error, if any
  * @return \p NULL if there was an error, the object (of correct type) otherwise
  */
-tm_parf_t *tm_parf_parse_value(tm_parf_token *tk, char *input, tm_parf_error *error) {
+tm_parf_t *tm_parf_parse_value(tm_parf_token *tk, char *input) {
+    assert(tk != NULL && input != NULL);
+
     tm_lexer_skip_whitespace_and_nl(tk, input);
 
     tm_parf_t* object = NULL;
 
     switch (tk->type) {
         case TM_TK_LBRACKET:
-            object = tm_parf_parse_list(tk, input, error);
+            object = tm_parf_parse_list(tk, input);
             break;
         case TM_TK_QUOTE:
-            object = tm_parf_parse_string(tk, input, error);
+            object = tm_parf_parse_string(tk, input);
             break;
         case TM_TK_DOT:
         case TM_TK_DASH:
         case TM_TK_PLUS:
         case TM_TK_DIGIT:
-            object = tm_parf_parse_number(tk, input, error);
+            object = tm_parf_parse_number(tk, input);
             break;
         case TM_TK_CHAR:
-            object = tm_parf_parse_boolean(tk, input, error);
+            object = tm_parf_parse_boolean(tk, input);
             break;
         default:
-            make_error(error, tk, "Unexpected token for value");
+            tm_print_error_msg_with_token(__FILE__, __LINE__, tk, "unexpected token to start value");
             break;
     }
 
@@ -312,19 +290,18 @@ tm_parf_t *tm_parf_parse_value(tm_parf_token *tk, char *input, tm_parf_error *er
  * CHAR_LIT := [a-zA-Z_-];
  * \endcode
  * @pre \code{.c}
- * tk != NULL && input != NULL && error != NULL
+ * tk != NULL && input != NULL
  * && 0 <= tk->position < strlen(input)
+ * && tk->type == TM_TK_ALPHA || tk->type == TM_TK_DIGIT || input[tk->position] == '_' || input[tk->position] == '-'
  * \endcode
  * @param tk valid token
  * @param input input string
  * @param error error, if any
  * @return \p NULL if there was an error, the name otherwise.
  */
-char* _parse_name_lit(tm_parf_token* tk, char* input, tm_parf_error* error) {
-    if (!(TM_TK_ALPHA == tk->type || tk->type == TM_TK_DIGIT) && input[tk->position] != '_' && input[tk->position] != '-') {
-        make_error(error, tk, "expected alpha or underscore to start the name literal");
-        return NULL;
-    }
+char *_parse_name_lit(tm_parf_token *tk, char *input) {
+    assert(tk != NULL && input != NULL);
+    assert(tk->type == TM_TK_ALPHA || tk->type == TM_TK_DIGIT || input[tk->position] == '_' || input[tk->position] == '-');
 
     int sz = 0;
     int mul = 64;
@@ -356,23 +333,19 @@ char* _parse_name_lit(tm_parf_token* tk, char* input, tm_parf_error* error) {
  * @pre \code{.c}
  * tk != NULL && input != NULL
  * && 0 <= tk->position < strlen(input)
+ * && tk->type == TM_TK_COMMENT
  * \endcode
  * @param tk valid token
  * @param input input string
  * @return \p TM_ERR_OK if everthing went ok, something else otherwise
  */
-int _skip_comment(tm_parf_token *tk, char *input) {
-    if (tm_lexer_eat(tk, input, TM_TK_COMMENT) != TM_ERR_OK) // that is not a comment?!?
-        return TM_ERR_LEXER_UNEXPECTED_TOKEN;
+void _skip_comment(tm_parf_token *tk, char *input) {
+    assert(tk != NULL && input != NULL);
+    assert(tk->type == TM_TK_COMMENT);
 
-    int r;
     while (tk->type != TM_TK_EOS && tk->type != TM_TK_NL) {
-        r = tm_lexer_advance(tk, input, 1);
-        if (r < 0)
-            return r;
+        tm_lexer_advance(tk, input, 1);
     }
-
-    return TM_ERR_OK;
 }
 
 /**
@@ -381,16 +354,14 @@ int _skip_comment(tm_parf_token *tk, char *input) {
  * OBJECT := (COMMENT | NAME_LITERAL VALUE)* EOS;
  * \endcode
  * @pre \code{.c}
- * input != NULL && error != NULL
+ * input != NULL
  * \endcode
  * @param input the input
  * @param error an eventual error
  * @return \p NULL if there was an error, the object (of type \p TM_T_OBJECT) otherwise
  */
-tm_parf_t* tm_parf_loads(char* input, tm_parf_error* error) {
-    if(input == NULL || error == NULL) {
-        return NULL;
-    }
+tm_parf_t *tm_parf_loads(char *input) {
+    assert(input != NULL);
 
     tm_parf_token tk;
     tm_parf_t* obj = tm_parf_object_new();
@@ -406,15 +377,10 @@ tm_parf_t* tm_parf_loads(char* input, tm_parf_error* error) {
             tm_lexer_skip_whitespace_and_nl(&tk, input);
         }
         else {
-            char* key = _parse_name_lit(&tk, input, error);
-            if(key == NULL) {
-                tm_parf_delete(obj);
-                return NULL;
-            }
-
+            char* key = _parse_name_lit(&tk, input);
             tm_lexer_skip_whitespace_and_nl(&tk, input);
 
-            tm_parf_t* value = tm_parf_parse_value(&tk, input, error);
+            tm_parf_t* value = tm_parf_parse_value(&tk, input);
             if (value == NULL) {
                 free(key);
                 tm_parf_delete(obj);

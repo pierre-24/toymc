@@ -184,7 +184,7 @@ void tm_print_error_msg_with_token(char *file, int line, tm_parf_token* tk, char
     va_list arglist;
 
     fprintf(stderr, "ERROR (%s:%d) :: ", file, line);
-    fprintf(stderr, "Token `%c` (file:%d:%d) :: ", *(tk->value), tk->line, tk->pos_in_line);
+    fprintf(stderr, "Token `%c` (file:%d:%d) :: ", (*(tk->value) == '\0') ? '0' : *(tk->value), tk->line, tk->pos_in_line);
     va_start(arglist, format);
     vfprintf(stderr, format, arglist);
     va_end(arglist);

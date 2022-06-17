@@ -264,7 +264,7 @@ int tm_simulation_parameters_read(tm_simulation_parameters* p, FILE* f) {
 
     // getting object
     tm_parf_error e;
-    tm_parf_t* obj = tm_parf_loads(buffer, &e);
+    tm_parf_t* obj = tm_parf_loads(buffer);
     free(buffer);
 
     if (obj == NULL) {
