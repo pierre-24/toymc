@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "simulation_parameters.h"
 #include "files.h"
 
@@ -46,61 +47,48 @@ struct valid_key {
  * @post \p ptr is set accordingly.
  */
 int simulation_parameter_fill_single_value_key(tm_parf_t* elmt, char type, void * ptr) {
-    int error = 0;
+    assert(elmt != NULL && ptr != NULL);
+    assert(type == 'i' || type == 'b' || type == 'r' || type == 's');
+
+    int error = TM_ERR_OK;
     if(type == 'i') {
         if(elmt->val_type != TM_T_INTEGER) {
-            printf("error: key %s: expected type %d, got %d\n", elmt->key, TM_T_INTEGER, elmt->val_type);
-            error = TM_ERR_PARF_UNEXPECTED_TYPE;
+            tm_print_error_msg(__FILE__, __LINE__, "key %s: expected type %d, got %d", elmt->key, TM_T_INTEGER, elmt->val_type);
+            error = TM_ERR_PARAMETER_FILE;
         } else {
-            long val = 0;
-            if(tm_parf_integer_value(elmt, &val) == 0)
-                *((long *) (ptr)) = val;
-            else
-                error = TM_ERR_API;
+            tm_parf_integer_value(elmt, (long *) ptr);
         }
     } else if(type == 'b') {
         if(elmt->val_type != TM_T_BOOLEAN) {
-            printf("error: key %s: expected type %d, got %d\n", elmt->key, TM_T_BOOLEAN, elmt->val_type);
-            error = TM_ERR_PARF_UNEXPECTED_TYPE;
+            tm_print_error_msg(__FILE__, __LINE__, "key %s: expected type %d, got %d\n", elmt->key, TM_T_BOOLEAN, elmt->val_type);
+            error = TM_ERR_PARAMETER_FILE;
         } else {
-            int val = 0;
-            if(tm_parf_boolean_value(elmt, &val) == 0)
-                *((int *) (ptr)) = val;
-            else
-                error = TM_ERR_API;
+            tm_parf_boolean_value(elmt, (int*) ptr);
         }
     } else if(type == 'r') {
         if(elmt->val_type != TM_T_REAL) {
-            printf("error: key %s: expected type %d, got %d\n", elmt->key, TM_T_REAL, elmt->val_type);
-            error = TM_ERR_PARF_UNEXPECTED_TYPE;
+            tm_print_error_msg(__FILE__, __LINE__, "key %s: expected type %d, got %d\n", elmt->key, TM_T_REAL, elmt->val_type);
+            error = TM_ERR_PARAMETER_FILE;
         } else {
-            double val = 0;
-            if(tm_parf_real_value(elmt, &val) == 0)
-                *((double *) (ptr)) = val;
-            else
-                error = TM_ERR_API;
+            tm_parf_real_value(elmt, (double *) ptr);
         }
     } else if(type == 's') {
         if(elmt->val_type != TM_T_STRING) {
-            printf("error: key %s: expected type %d, got %d\n", elmt->key, TM_T_STRING, elmt->val_type);
-            error = TM_ERR_PARF_UNEXPECTED_TYPE;
+            tm_print_error_msg(__FILE__, __LINE__, "key %s: expected type %d, got %d\n", elmt->key, TM_T_STRING, elmt->val_type);
+            error = TM_ERR_PARAMETER_FILE;
         } else {
             char* val, *dest;
             unsigned int sz;
-            if(tm_parf_string_value(elmt, &val) == 0) {
-                tm_parf_string_length(elmt, &sz);
-                dest = malloc(sizeof(char) * (sz + 1));
-                if (dest == NULL) {
-                    error = TM_ERR_MALLOC;
-                } else {
-                    strcpy(dest, val);
-                    *((char **) (ptr)) = dest;
-                }
-            } else
-                error = TM_ERR_API;
+            tm_parf_string_value(elmt, &val);
+            tm_parf_string_length(elmt, &sz);
+            dest = malloc(sizeof(char) * (sz + 1));
+            if (dest == NULL) {
+                error = TM_ERR_MALLOC;
+            } else {
+                strcpy(dest, val);
+                *((char **) (ptr)) = dest;
+            }
         }
-    } else {
-        error = TM_ERR_API;
     }
 
     return error;
@@ -109,7 +97,8 @@ int simulation_parameter_fill_single_value_key(tm_parf_t* elmt, char type, void 
 /**
  * Fill a list parameter, if of the correct type
  * @pre \code{.c}
- * elmt != NULL && ptr != NULL && !TM_PARF_CHECK_P(elmt, TM_T_LIST)
+ * elmt != NULL && ptr != NULL && types != NULL
+ * && !TM_PARF_CHECK_P(elmt, TM_T_LIST)
  * \endcode
  * @param elmt the object that should contain the value
  * @param types expected type of the elements of the list (\p i, \p b, \b r or \p s, then the length of the list)
@@ -118,19 +107,15 @@ int simulation_parameter_fill_single_value_key(tm_parf_t* elmt, char type, void 
  * @post \p ptr is set accordingly.
  */
 int simulation_parameter_fill_multiple_values_key(tm_parf_t* elmt, char* types, void * ptr) {
-    if(TM_PARF_CHECK_P(elmt, TM_T_LIST)) {
-        return TM_ERR_PARF_NCHECK;
-    }
+    assert(elmt != NULL && ptr != NULL && types != NULL);
+    assert(!TM_PARF_CHECK_P(elmt, TM_T_LIST));
 
     unsigned int sz = atoi(types + 1), szi, szp;
-
-    if(tm_parf_list_length(elmt, &szi) != 0) {
-        return TM_ERR_API;
-    }
+    tm_parf_list_length(elmt, &szi);
 
     if (sz != szi) {
-        printf("error: key %s: expected size %d, got %d", elmt->key, sz, szi);
-        return TM_ERR_PARF_LIST_SIZE;
+        tm_print_error_msg(__FILE__, __LINE__, "key %s: expected size %d, got %d", elmt->key, sz, szi);
+        return TM_ERR_PARAMETER_FILE;
     }
 
     switch (types[0]) {
@@ -152,7 +137,7 @@ int simulation_parameter_fill_multiple_values_key(tm_parf_t* elmt, char* types, 
     tm_parf_iterator* it = tm_parf_iterator_new(elmt);
     tm_parf_t* elmt_list;
     char* ptr2 = (char*) ptr;
-    for(unsigned int i = 0; i < szi && error == 0; i++) {
+    for(unsigned int i = 0; i < szi && error == TM_ERR_OK; i++) {
         tm_parf_iterator_next(it, &elmt_list);
         error = simulation_parameter_fill_single_value_key(elmt_list, types[0], (void*) (ptr2 + i * szp));
     }
@@ -173,11 +158,8 @@ int simulation_parameter_fill_multiple_values_key(tm_parf_t* elmt, char* types, 
  * @post \p p is set accordingly.
  */
 int tm_simulation_parameter_fill(tm_simulation_parameters* p, tm_parf_t* obj) {
-    if(p == NULL || obj == NULL)
-        return TM_ERR_PARAM_NULL;
-
-    if(TM_PARF_CHECK_P(obj, TM_T_OBJECT))
-        return TM_ERR_PARF_NCHECK;
+    assert(p != NULL && obj != NULL);
+    assert(!TM_PARF_CHECK_P(obj, TM_T_OBJECT));
 
     // setup valid keys
     struct valid_key keys[] = {
@@ -253,8 +235,7 @@ int tm_simulation_parameter_fill(tm_simulation_parameters* p, tm_parf_t* obj) {
  * @return \p TM_ERR_OK if everything went well, something else otherwise
  */
 int tm_simulation_parameters_read(tm_simulation_parameters* p, FILE* f) {
-    if(p == NULL || f == NULL)
-        return TM_ERR_PARAM_NULL;
+    assert(p != NULL && f != NULL);
 
     char* buffer;
     int r = tm_read_file(f, &buffer);
@@ -263,13 +244,11 @@ int tm_simulation_parameters_read(tm_simulation_parameters* p, FILE* f) {
     }
 
     // getting object
-    tm_parf_error e;
     tm_parf_t* obj = tm_parf_loads(buffer);
     free(buffer);
 
     if (obj == NULL) {
-        tm_print_error_msg(__FILE__, __LINE__, "error while reading parameter file (on line %d): %s", e.line, e.what);
-        return TM_ERR_PARF;
+        return TM_ERR_PARAMETER_FILE;
     }
 
     r = tm_simulation_parameter_fill(p, obj);
@@ -280,12 +259,14 @@ int tm_simulation_parameters_read(tm_simulation_parameters* p, FILE* f) {
 
 /**
  * Delete a  \p tm_simulation_parameters structure.
+ * @pre \code{.c}
+ * p != NULL
+ * \endcode
  * @param p valid structure
- * @return \p TM_ERR_OK if the structure was delete, something else otherwise
+ * @return \p TM_ERR_OK
  */
 int tm_simulation_parameters_delete(tm_simulation_parameters* p) {
-    if(p == NULL)
-        return -1;
+    assert(p != NULL);
 
     if(p->path_output != NULL)
         free(p->path_output);
