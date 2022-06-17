@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <assert.h>
 
 #include "xyz_parser.h"
 
@@ -14,6 +15,7 @@
  * @pre \code{.c}
  * tk != NULL && input != NULL && out != NULL
  * && 0 <= tk->position < strlen(input)
+ * && tk->type == TM_TK_DIGIT || tk->type == TM_TK_DASH || tk->type == TM_TK_PLUS || tk->type == TM_TK_DOT
  * \endcode
  * @param tk valid token
  * @param input input string
@@ -22,18 +24,14 @@
  * @return \p TM_ERR_OK if the value is set, something else otherwise
  */
 int tm_xyz_parse_real(tm_parf_token* tk, char* input, double *out) {
+    assert(tk != NULL && input != NULL && out != NULL);
+    assert(tk->type == TM_TK_DIGIT || tk->type == TM_TK_DASH || tk->type == TM_TK_PLUS || tk->type == TM_TK_DOT);
+
     char* beg = tk->value;
     int beg_pos = tk->position;
 
-    // starts with (DIGIT | DASH | PLUS | DOT)
-    if (tm_lexer_eat(tk, input, TM_TK_DIGIT) != TM_ERR_OK
-        && tm_lexer_eat(tk, input, TM_TK_DASH) != TM_ERR_OK
-        && tm_lexer_eat(tk, input, TM_TK_PLUS) != TM_ERR_OK
-        && tm_lexer_eat(tk, input, TM_TK_DOT) != TM_ERR_OK) {
-        return TM_ERR_XYZ_NOT_A_FLOAT;
-    }
-
     // move
+    tm_lexer_advance(tk, input, 1);
     tm_lexer_skip(tk, input, TM_TK_DIGIT);
 
     // get DOT
@@ -46,7 +44,8 @@ int tm_xyz_parse_real(tm_parf_token* tk, char* input, double *out) {
     *out = strtod(beg, &end);
 
     if ((int) (end-beg) != tk->position - beg_pos) {
-        return TM_ERR_XYZ_NOT_A_FLOAT;
+        tm_print_error_msg_with_token(__FILE__, __LINE__, tk, "wrong real");
+        return TM_ERR_XYZ;
     }
 
     return TM_ERR_OK;
@@ -57,6 +56,7 @@ int tm_xyz_parse_real(tm_parf_token* tk, char* input, double *out) {
  * @pre \code{.c}
  * tk != NULL && input != NULL && out != NULL
  * && 0 <= tk->position < strlen(input)
+ * && tk->type == TM_TK_DIGIT
  * \endcode
  * In the end \p strtol is used.
  * @param tk valid token
@@ -66,13 +66,11 @@ int tm_xyz_parse_real(tm_parf_token* tk, char* input, double *out) {
  * @return \p TM_ERR_OK if the value is set, something else otherwise
  */
 int tm_xyz_parse_positive_int(tm_parf_token* tk, char* input, long *out) {
+    assert(tk != NULL && input != NULL && out != NULL);
+    assert(tk->type == TM_TK_DIGIT);
+
     char* beg = tk->value;
     int beg_pos = tk->position;
-
-    // starts with a DIGIT?
-    if (tm_lexer_eat(tk, input, TM_TK_DIGIT) != TM_ERR_OK) {
-        return TM_ERR_XYZ_NOT_AN_INT;
-    }
 
     // move
     tm_lexer_skip(tk, input, TM_TK_DIGIT);
@@ -81,7 +79,8 @@ int tm_xyz_parse_positive_int(tm_parf_token* tk, char* input, long *out) {
     *out = strtol(beg, &end, 10);
 
     if ((int) (end-beg) != tk->position - beg_pos) {
-        return TM_ERR_XYZ_NOT_AN_INT;
+        tm_print_error_msg_with_token(__FILE__, __LINE__, tk, "wrong integer");
+        return TM_ERR_XYZ;
     }
 
     return TM_ERR_OK;
@@ -95,6 +94,7 @@ int tm_xyz_parse_positive_int(tm_parf_token* tk, char* input, long *out) {
  * @pre \code{.c}
  * tk != NULL && input != NULL && out != NULL
  * && 0 <= tk->position < strlen(input)
+ * && tk->type == TM_TK_ALPHA
  * \endcode
  * @param tk valid token
  * @param input input string
@@ -103,16 +103,13 @@ int tm_xyz_parse_positive_int(tm_parf_token* tk, char* input, long *out) {
  * @return \p TM_ERR_OK if the value is set, something else otherwise
  */
 int tm_xyz_parse_atom_type(tm_parf_token* tk, char* input, char **out) {
-    int pos_start = tk->position;
+    assert(tk != NULL && input != NULL && out != NULL);
+    assert(tk->type == TM_TK_ALPHA);
 
-    if(tk->type != TM_TK_ALPHA) // start with ALPHA?
-        return TM_ERR_XYZ_NOT_ATOM_TYPE;
+    int pos_start = tk->position;
 
     while((tk->type == TM_TK_ALPHA || tk->type == TM_TK_DIGIT) && tk->type != TM_TK_EOS)
         tm_lexer_advance(tk, input, 1);
-
-    if(tk->position == pos_start) // read nothing?
-        return TM_ERR_XYZ_NOT_ATOM_TYPE;
 
     *out = malloc((tk->position - pos_start + 1) * sizeof(char));
     if(*out == NULL)
@@ -141,10 +138,11 @@ tm_geometry *tm_xyz_loads(char *input) {
 
     // read number of atoms
     long N = 0;
+    if(tk.type != TM_TK_DIGIT) {
+        tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "expected digit to start XYZ file");
+    }
 
-    int r = tm_xyz_parse_positive_int(&tk, input, &N);
-    if(r != TM_ERR_OK) {
-        tm_print_error_code(__FILE__, __LINE__, r);
+    if(tm_xyz_parse_positive_int(&tk, input, &N) != TM_ERR_OK) {
         return NULL;
     }
 
@@ -159,7 +157,7 @@ tm_geometry *tm_xyz_loads(char *input) {
 
     tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
     if(tm_lexer_eat(&tk, input, TM_TK_NL) != TM_ERR_OK) {
-        tm_print_error_msg(__FILE__, __LINE__, "error while reading XYZ file: no title and coordinates");
+        tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "expected a single integer on first line");
         tm_geometry_delete(g);
         return NULL;
     }
@@ -183,7 +181,7 @@ tm_geometry *tm_xyz_loads(char *input) {
     free(title);
 
     if(tm_lexer_eat(&tk, input, TM_TK_NL) != TM_ERR_OK) {
-        tm_print_error_msg(__FILE__, __LINE__, "error while reading XYZ file: no coordinates");
+        tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "expected coordinates");
         tm_geometry_delete(g);
         return NULL;
     }
@@ -193,15 +191,24 @@ tm_geometry *tm_xyz_loads(char *input) {
     int type_i;
     char* atom_type;
     double x, y, z;
+    int r;
 
     while(atom_i < N && tk.type != TM_TK_EOS) {
-        // atom type
+        // read atom type
         tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
+        if(tk.type != TM_TK_ALPHA) {
+            tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "expected atom type to start with ALPHA");
+            r = TM_ERR_XYZ;
+            break;
+        }
+
         r = tm_xyz_parse_atom_type(&tk, input, &atom_type);
         if(r != TM_ERR_OK)
             break;
 
         tm_print_debug_msg(__FILE__, __LINE__, "Read atom %s on line %d", atom_type, tk.line);
+
+        // find integer representation
         type_i = 0;
         while(type_i < N) {
             if(g->type_vals[type_i] == NULL) {
@@ -217,18 +224,55 @@ tm_geometry *tm_xyz_loads(char *input) {
             type_i++;
         }
 
-        // coordinates
+        // coordinate X
+        if(tk.type != TM_TK_WHITESPACE) {
+            tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "expected at least one WHITESPACE between atom type and coordinate");
+            r = TM_ERR_XYZ;
+            break;
+        }
+
         tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
+        if(tk.type != TM_TK_DIGIT && tk.type != TM_TK_DASH && tk.type != TM_TK_PLUS && tk.type != TM_TK_DOT) {
+            tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "expected coordinate");
+            r = TM_ERR_XYZ;
+            break;
+        }
+
         r = tm_xyz_parse_real(&tk, input, &x);
         if(r != TM_ERR_OK)
             break;
 
+        // coordinate Y
+        if(tk.type != TM_TK_WHITESPACE) {
+            tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "expected at least one WHITESPACE between two coordinates");
+            r = TM_ERR_XYZ;
+            break;
+        }
+
         tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
+        if(tk.type != TM_TK_DIGIT && tk.type != TM_TK_DASH && tk.type != TM_TK_PLUS && tk.type != TM_TK_DOT) {
+            tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "expected coordinate");
+            r = TM_ERR_XYZ;
+            break;
+        }
         r = tm_xyz_parse_real(&tk, input, &y);
         if(r != TM_ERR_OK)
             break;
 
+        // coordinate Z
+        if(tk.type != TM_TK_WHITESPACE) {
+            tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "expected at least one WHITESPACE between two coordinates");
+            r = TM_ERR_XYZ;
+            break;
+        }
+
         tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
+        if(tk.type != TM_TK_DIGIT && tk.type != TM_TK_DASH && tk.type != TM_TK_PLUS && tk.type != TM_TK_DOT) {
+            tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "expected coordinate");
+            r = TM_ERR_XYZ;
+            break;
+        }
+
         r = tm_xyz_parse_real(&tk, input, &z);
         if(r != TM_ERR_OK)
             break;
@@ -241,15 +285,15 @@ tm_geometry *tm_xyz_loads(char *input) {
         tm_lexer_skip(&tk, input, TM_TK_WHITESPACE);
 
         if(atom_i < N) {
-            if(tm_lexer_eat(&tk, input, TM_TK_NL)) {
-                r = TM_ERR_XYZ_TOO_SHORT;
+            if(tm_lexer_eat(&tk, input, TM_TK_NL) != TM_ERR_OK) {
+                tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "XYZ is shorter than expected");
+                r = TM_ERR_XYZ;
                 break;
             }
         }
     }
 
     if (r != TM_ERR_OK) {
-        tm_print_error_msg(__FILE__, __LINE__, "Error while reading XYZ (on line %d) -- %s", tk.line, ERROR_EXPLS[r]);
         tm_geometry_delete(g);
         return NULL;
     }
@@ -257,8 +301,8 @@ tm_geometry *tm_xyz_loads(char *input) {
     // too long?
     tm_lexer_skip_whitespace_and_nl(&tk, input);
 
-    if(tk.type != TM_TK_EOS) {
-        tm_print_error_msg(__FILE__, __LINE__, "Error while reading XYZ (on line %d) -- more atom than expected!", tk.line);
+    if(tm_lexer_eat(&tk, input, TM_TK_EOS) != TM_ERR_OK) {
+        tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "XYZ is longer than expected");
         tm_geometry_delete(g);
         return NULL;
     }

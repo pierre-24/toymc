@@ -8,8 +8,6 @@ tm_parf_t *tm_parf_parse_number(tm_parf_token *tk, char *input);
 tm_parf_t *tm_parf_parse_boolean(tm_parf_token *tk, char *input);
 tm_parf_t *tm_parf_parse_list(tm_parf_token *tk, char *input);
 
-tm_parf_error e;
-
 tm_parf_t *parse_string(tm_parf_token *t, char *input) {
     _OK(tm_lexer_token_init(t, input));
     return tm_parf_parse_string(t, input);
