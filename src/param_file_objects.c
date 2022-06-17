@@ -429,7 +429,7 @@ int tm_parf_list_append(tm_parf_t* obj, tm_parf_t* val) {
  * @return \p TM_ERR_OK
  */
 int tm_parf_list_length(tm_parf_t* obj, unsigned int* sz) {
-    assert(TM_PARF_CHECK_P(obj, TM_T_LIST));
+    assert(!TM_PARF_CHECK_P(obj, TM_T_LIST));
 
     *sz = obj->val_size;
     return TM_ERR_OK;
@@ -453,7 +453,8 @@ int tm_parf_list_get(tm_parf_t* obj, int index, tm_parf_t** val) {
     if (index < 0)
         index = (int) obj->val_size + index;
 
-    assert(index >=0 && index < (int) obj->val_size);
+    if(index < 0 || index >= (int) obj->val_size)
+        return TM_ERR_PARAMETER_FILE;
 
     tm_parf_t* o = obj->val_obj_or_list;
     for(int i=0; i < index; i++) {

@@ -25,19 +25,6 @@ START_TEST(test_parser_positive_int) {
     _OK(tm_xyz_parse_positive_int(&t, tmp, &val_int_found));
     ck_assert_int_eq(val_int, val_int_found);
     ck_assert_int_eq(t.type, TM_TK_EOS);
-
-    // non-working stuffs
-    char* wrong_examples[] = {
-            "xy",
-            ".3",
-            "-3"
-    };
-
-    sz = sizeof(wrong_examples) / sizeof(*wrong_examples);
-    for(int i=0; i < sz; i++) {
-        _OK(tm_lexer_token_init(&t, wrong_examples[i]));
-        _NOK(tm_xyz_parse_positive_int(&t, wrong_examples[i], &val_int_found));
-    }
 }
 END_TEST
 
@@ -58,7 +45,6 @@ START_TEST(test_parser_real) {
 
     // non-working stuffs
     char* wrong_examples[] = {
-            "xy",
             ".",
             "+e3",
             "+.e-5"
@@ -90,19 +76,6 @@ START_TEST(test_parser_atom_type) {
         ck_assert_str_eq(correct_input[i], found);
         ck_assert_int_eq(t.type, TM_TK_EOS);
         free(found);
-    }
-
-    // non-working stuffs
-    char* wrong_examples[] = {
-            "25",
-            "2Z",
-            "!C",
-    };
-
-    sz = sizeof(wrong_examples) / sizeof(*wrong_examples);
-    for(int i=0; i < sz; i++) {
-        _OK(tm_lexer_token_init(&t, wrong_examples[i]));
-        _NOK(tm_xyz_parse_atom_type(&t, wrong_examples[i], &found));
     }
 
 } END_TEST
@@ -140,7 +113,16 @@ START_TEST(test_read_errors) {
     tm_geometry * g = tm_xyz_loads("1"); // no title
     ck_assert_ptr_null(g);
 
+    g = tm_xyz_loads("x"); // not a number
+    ck_assert_ptr_null(g);
+
     g = tm_xyz_loads("1\nX"); // no coordinates
+    ck_assert_ptr_null(g);
+
+    g = tm_xyz_loads("1\nX\nC"); // not enough coordinates
+    ck_assert_ptr_null(g);
+
+    g = tm_xyz_loads("1\nX\nC x"); // not a coordinate
     ck_assert_ptr_null(g);
 
     g = tm_xyz_loads("1\nX\nC .1"); // not enough coordinates

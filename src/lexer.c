@@ -7,8 +7,8 @@
 
 int lexer_translator[] = {
         0x20, TM_TK_WHITESPACE,
-        0x0a, TM_TK_CR,
-        0x0d, TM_TK_NL,
+        0x0a, TM_TK_NL,
+        0x0d, TM_TK_CR,
         0x09, TM_TK_WHITESPACE,
         '0',  TM_TK_DIGIT,
         '1',  TM_TK_DIGIT,
@@ -68,9 +68,6 @@ int tm_lexer_token_init(tm_parf_token* tk, char* input) {
 int tm_lexer_advance(tm_parf_token *tk, char *input, int shift) {
     assert(tk != NULL && input != NULL);
     assert(shift == 0 || shift == 1);
-
-    if (tk->type == TM_TK_EOS)
-        return TM_ERR_OK;
 
     char c = input[tk->position + shift];
     tm_parf_token_type t = TM_TK_CHAR;
@@ -183,10 +180,15 @@ void tm_print_error_msg_with_token(char *file, int line, tm_parf_token* tk, char
 
     va_list arglist;
 
+    char buff[24];
+
     fprintf(stderr, "ERROR (%s:%d) :: ", file, line);
-    fprintf(stderr, "Token `%c` (file:%d:%d) :: ", (*(tk->value) == '\0') ? '0' : *(tk->value), tk->line, tk->pos_in_line);
+
+    sprintf(buff, isgraph(*(tk->value)) ? "`%c`": "0x%x", *(tk->value));
+
     va_start(arglist, format);
     vfprintf(stderr, format, arglist);
     va_end(arglist);
+    fprintf(stderr, " (from token@%d:%d = {type=%d, value=%s})", tk->line, tk->pos_in_line, tk->type, buff);
     fprintf(stderr, "\n");
 }

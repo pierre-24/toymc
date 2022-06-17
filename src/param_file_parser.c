@@ -54,6 +54,8 @@ char *_parse_string(tm_parf_token *tk, char *input) {
         tm_lexer_advance(tk, input, 1);
     }
 
+    tm_lexer_eat(tk, input, TM_TK_QUOTE);
+
     tmp[sz] = '\0';
     return tmp;
 }
@@ -210,6 +212,8 @@ tm_parf_t* tm_parf_parse_value(tm_parf_token* tk, char* input); // forward decl
 tm_parf_t *tm_parf_parse_list(tm_parf_token *tk, char *input) {
     assert(tk != NULL && input != NULL);
     assert(tk->type == TM_TK_LBRACKET);
+
+    tm_lexer_advance(tk, input, 1); // skip LBRACKET
 
     tm_parf_t* object = tm_parf_list_new();
     tm_parf_t* val;
@@ -378,6 +382,10 @@ tm_parf_t *tm_parf_loads(char *input) {
         }
         else {
             char* key = _parse_name_lit(&tk, input);
+            if(tk.type != TM_TK_WHITESPACE) {
+                tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "expected whitespace after key");
+            }
+
             tm_lexer_skip_whitespace_and_nl(&tk, input);
 
             tm_parf_t* value = tm_parf_parse_value(&tk, input);

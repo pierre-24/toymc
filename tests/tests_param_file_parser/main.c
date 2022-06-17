@@ -36,8 +36,11 @@ START_TEST(test_parser_string) {
     // first test
     val = "xyz";
     sprintf(tmp, "\"%s\"", val);
+    _OK(tm_lexer_token_init(&t, tmp));
 
     tm_parf_t* obj = parse_string(&t, tmp);
+    ck_assert_ptr_nonnull(obj);
+
     _OK(tm_parf_string_value(obj, &found));
     ck_assert_str_eq(found, val);
     ck_assert_int_eq(t.type, TM_TK_EOS);
@@ -47,9 +50,11 @@ START_TEST(test_parser_string) {
     // second test (with quote in it)
     val = "a \\\"lapin\\\" is a rabbit, in french";
     sprintf(tmp, "\"%s\"", val);
-    tm_lexer_advance(&t, tmp, 0);
+    _OK(tm_lexer_token_init(&t, tmp));
 
     obj = parse_string(&t, tmp);
+    ck_assert_ptr_nonnull(obj);
+
     _OK(tm_parf_string_value(obj, &found));
     ck_assert_str_eq(found, val);
     ck_assert_int_eq(t.type, TM_TK_EOS);
@@ -58,6 +63,7 @@ START_TEST(test_parser_string) {
 
     // error
     val = "\"a non-finished one";
+    _OK(tm_lexer_token_init(&t, tmp));
     ck_assert_ptr_null(parse_string(&t, val));
 }
 END_TEST
@@ -72,7 +78,11 @@ START_TEST(test_parser_number) {
 
     // integer
     sprintf(tmp, "%d", val_int);
+    _OK(tm_lexer_token_init(&t, tmp));
+
     tm_parf_t* obj = parse_number(&t, tmp);
+    ck_assert_ptr_nonnull(obj);
+
     _OK(tm_parf_integer_value(obj, &val_int_found));
     ck_assert_int_eq(val_int, val_int_found);
     ck_assert_int_eq(t.type, TM_TK_EOS);
@@ -81,8 +91,11 @@ START_TEST(test_parser_number) {
 
     // real
     sprintf(tmp, "%f", val_real);
+    _OK(tm_lexer_token_init(&t, tmp));
 
     obj = parse_number(&t, tmp);
+    ck_assert_ptr_nonnull(obj);
+
     _OK(tm_parf_real_value(obj, &val_real_found));
     ck_assert_double_eq(val_real, val_real_found);
     ck_assert_int_eq(t.type, TM_TK_EOS);
@@ -100,14 +113,17 @@ START_TEST(test_parser_number) {
 
     int sz = sizeof(examples) / sizeof(*examples);
     for(int i=0; i < sz; i++) {
+        _OK(tm_lexer_token_init(&t, examples[i]));
+
         obj = parse_number(&t, examples[i]);
+        ck_assert_ptr_nonnull(obj);
+
         ck_assert_int_eq(t.type, TM_TK_EOS);
         tm_parf_delete(obj);
     }
 
     // non-working stuffs
     char* wrong_examples[] = {
-            "xy",
             ".",
             "+e3",
             "+.e-5"
@@ -115,6 +131,7 @@ START_TEST(test_parser_number) {
 
     sz = sizeof(wrong_examples) / sizeof(*wrong_examples);
     for(int i=0; i < sz; i++) {
+        _OK(tm_lexer_token_init(&t, wrong_examples[i]));
         ck_assert_ptr_null(parse_number(&t, wrong_examples[i]));
     }
 }
@@ -129,13 +146,19 @@ START_TEST(test_parser_boolean) {
     char* false[] = {"false", "no", "off"};
 
     for(int i=0; i < 3; i++) {
+        _OK(tm_lexer_token_init(&t, true[i]));
         obj = parse_boolean(&t, true[i]);
+        ck_assert_ptr_nonnull(obj);
+
         _OK(tm_parf_boolean_value(obj, &found));
         ck_assert_int_eq(found, 1);
         ck_assert_int_eq(t.type, TM_TK_EOS);
         tm_parf_delete(obj);
 
+        _OK(tm_lexer_token_init(&t, false[i]));
         obj = parse_boolean(&t, false[i]);
+        ck_assert_ptr_nonnull(obj);
+
         _OK(tm_parf_boolean_value(obj, &found));
         ck_assert_int_eq(found, 0);
         ck_assert_int_eq(t.type, TM_TK_EOS);
@@ -147,7 +170,6 @@ START_TEST(test_parser_boolean) {
             "xy",
             "tru",
             "folse",
-            "+true"
     };
 
     int sz = sizeof(wrong_examples) / sizeof(*wrong_examples);
@@ -165,41 +187,44 @@ START_TEST(test_parser_list) {
     tm_parf_token t;
 
     sprintf(tmp, "[%d %d %d]", value[0], value[1], value[2]);
-
+    _OK(tm_lexer_token_init(&t, tmp));
     tm_parf_t* obj_list = parse_list(&t, tmp);
+    ck_assert_ptr_nonnull(obj_list);
+
     tm_parf_t* obj;
-    ck_assert_int_eq(t.type, TM_TK_EOS);
+   ck_assert_int_eq(t.type, TM_TK_EOS);
 
-    tm_parf_iterator * it = tm_parf_iterator_new(obj_list);
-    int i = 0;
-    long val;
+   tm_parf_iterator * it = tm_parf_iterator_new(obj_list);
+   int i = 0;
+   long val;
 
-    while(tm_parf_iterator_has_next(it)) {
-        _OK(tm_parf_iterator_next(it, &obj));
-        _OK(tm_parf_integer_value(obj, &val));
-        ck_assert_int_eq(val, value[i]);
-        i++;
-    }
+   while(tm_parf_iterator_has_next(it)) {
+       _OK(tm_parf_iterator_next(it, &obj));
+       _OK(tm_parf_integer_value(obj, &val));
+       ck_assert_int_eq(val, value[i]);
+       i++;
+   }
 
-    ck_assert_int_eq(i, 3);
+   ck_assert_int_eq(i, 3);
 
-    tm_parf_delete(obj_list);
-    tm_parf_iterator_delete(it);
+   tm_parf_delete(obj_list);
+   tm_parf_iterator_delete(it);
 
-    // non-working stuffs
-    char* wrong_examples[] = {
-            "[",
-            "[2",
-            "[2 [1 2]",
-            "[2 [1 2",
-            "[2 x",
-            "[2 3"
-    };
+   // non-working stuffs
+   char* wrong_examples[] = {
+           "[",
+           "[2",
+           "[2 [1 2]",
+           "[2 [1 2",
+           "[2 x",
+           "[2 3"
+   };
 
-    int sz = sizeof(wrong_examples) / sizeof(*wrong_examples);
-    for(i=0; i < sz; i++) {
-        ck_assert_ptr_null(parse_list(&t, wrong_examples[i]));
-    }
+   int sz = sizeof(wrong_examples) / sizeof(*wrong_examples);
+   for(i=0; i < sz; i++) {
+       _OK(tm_lexer_token_init(&t, wrong_examples[i]));
+       ck_assert_ptr_null(parse_list(&t, wrong_examples[i]));
+   }
 }
 END_TEST
 

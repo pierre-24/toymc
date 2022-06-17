@@ -330,7 +330,7 @@ START_TEST(test_parf_object_iterate) {
     tm_parf_iterator * it = tm_parf_iterator_new(obj_object);
     int i = 0;
 
-    while(tm_parf_iterator_next(it, &obj) == 0) { // another (less safe?) form
+    while(tm_parf_iterator_has_next(it) && tm_parf_iterator_next(it, &obj) == TM_ERR_OK) { // another (less safe?) form
         ck_assert_str_eq(obj->key, key[i]);
         ck_assert_ptr_eq(obj, tab[i]);
         i++;

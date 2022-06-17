@@ -140,6 +140,7 @@ tm_geometry *tm_xyz_loads(char *input) {
     long N = 0;
     if(tk.type != TM_TK_DIGIT) {
         tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "expected digit to start XYZ file");
+        return NULL;
     }
 
     if(tm_xyz_parse_positive_int(&tk, input, &N) != TM_ERR_OK) {
@@ -301,7 +302,7 @@ tm_geometry *tm_xyz_loads(char *input) {
     // too long?
     tm_lexer_skip_whitespace_and_nl(&tk, input);
 
-    if(tm_lexer_eat(&tk, input, TM_TK_EOS) != TM_ERR_OK) {
+    if(tk.type != TM_TK_EOS) {
         tm_print_error_msg_with_token(__FILE__, __LINE__, &tk, "XYZ is longer than expected");
         tm_geometry_delete(g);
         return NULL;
