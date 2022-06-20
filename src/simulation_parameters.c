@@ -10,6 +10,8 @@ tm_simulation_parameters* tm_simulation_parameters_new() {
     tm_simulation_parameters* p = malloc(sizeof(tm_simulation_parameters));
 
     if(p != NULL) {
+        p->n_steps = 1;
+
         p->path_output = NULL;
         p->output_freq = 5;
         p->print_freq = 1;
@@ -24,6 +26,7 @@ tm_simulation_parameters* tm_simulation_parameters_new() {
         p->use_NpT = 0;
         p->target_pressure = 1.;
         p->delta_volume = .1;
+        p->pressure_freq = 1;
     }
 
     return p;
@@ -164,9 +167,11 @@ int tm_simulation_parameter_fill(tm_simulation_parameters* p, tm_parf_t* obj) {
     // setup valid keys
     struct valid_key keys[] = {
             // integers:
+            {"n_steps", "i", &(p->n_steps)},
             {"seed", "i", &(p->seed)},
             {"output_freq", "i", &(p->output_freq)},
             {"print_freq", "i", &(p->print_freq)},
+            {"pressure_freq", "i", &(p->pressure_freq)},
 
             // boolean
             {"use_NpT", "b", &(p->use_NpT)},

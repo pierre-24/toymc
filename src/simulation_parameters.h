@@ -8,6 +8,9 @@
 #include <time.h>
 
 typedef struct tm_simulation_parameters_ {
+    // duration
+    long n_steps; // 1 step = 1 sweep over all atoms
+
     // output
     char* path_output;
     long output_freq;
@@ -25,6 +28,7 @@ typedef struct tm_simulation_parameters_ {
     int use_NpT;
     double target_pressure;
     double delta_volume;
+    long pressure_freq;
 } tm_simulation_parameters;
 
 tm_simulation_parameters* tm_simulation_parameters_new();

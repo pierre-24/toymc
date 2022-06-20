@@ -91,7 +91,7 @@ void compute_U(double* positions, int N, double L, double rc2, double* U, double
 
 int main(int argc, char* argv[]) {
     double rho = 0.8, rc= 4.f, *positions = NULL, U = .0, vir=.0, delta=0.1f, U_old, U_new, vir_old, vir_new, p_old[3], p_new[3], T=0.9, e;
-    int N = 512, trials=1000, accepted=0;
+    int N = 512, trials=100, accepted=0;
     int seed = time(NULL);
     char* out = "out.xyz";
     

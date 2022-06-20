@@ -75,6 +75,13 @@ add_unit_test(
         LIBS toymc ${CHECK_LIBRARIES} ${CHECK_EXTRA_LIBS}
 )
 
+# test potentials
+add_unit_test(
+        NAME tests_potentials
+        SOURCES tests_potentials/main.c
+        LIBS toymc ${CHECK_LIBRARIES} ${CHECK_EXTRA_LIBS}
+)
+
 ## add an extra "check" target
 add_custom_target(checks COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS ${TESTNAMES})
 add_custom_target(build_checks COMMAND true DEPENDS ${TESTNAMES})
